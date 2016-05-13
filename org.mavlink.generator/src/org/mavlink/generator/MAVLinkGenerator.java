@@ -44,7 +44,7 @@ import org.xml.sax.SAXException;
  * 
  * @author ghelle
  * @version $Rev: 23 $
- * @see main
+ * @see
  */
 public class MAVLinkGenerator {
 
@@ -77,7 +77,7 @@ public class MAVLinkGenerator {
      *     useExtraByte : if true use extra crc byte to compute CRC. If true generate for MAVLink 1.0 else MAVLink 0.9
      *     debug : true to generate toString methods in each message class 
      *     
-     * Example : java org.mavlink.generator.MAVLinkGenerator resources/1.0 target/ true true true true 
+     * Example : java org.mavlink.generator.MAVLinkGenerator resources/1.0 target/ true true true true
      *   Generate MAVLink message Java classes for mavlink xml files contains in resources/1.0 in target directory 
      *   for Little Endian data, embedded code using extra byte for crc and generating debug code
      * 

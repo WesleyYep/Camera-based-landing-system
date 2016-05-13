@@ -5,6 +5,7 @@ package org.mavlink;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.PipedInputStream;
 import java.io.PrintStream;
 
 import org.mavlink.messages.IMAVLinkMessageID;
@@ -27,17 +28,47 @@ public class TestMavlinkFilter {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Usage :");
-            System.out.println("java -cp org.mavlink.library-1.00.jar;org.mavlink.util-1.00.jar org.mavlink.TestMavlinkFilter logFile");
-
-            System.exit(1);
-        }
-        String filename = args[0];
-        filterFile(filename);
-        System.exit(0);
+//        if (args.length != 1) {
+//            System.out.println("Usage :");
+//            System.out.println("java -cp org.mavlink.library-1.00.jar;org.mavlink.util-1.00.jar org.mavlink.TestMavlinkFilter logFile");
+//
+//            System.exit(1);
+//        }
+//        String filename = args[0];
+//        filterFile(filename);
+//        System.exit(0);
+		filterFromSerial();
     }
 
+	  static public void filterFromSerial() {
+	        MAVLinkReader reader;
+	      //  String fileOut = filename + "-resultat.filter";
+	        int nb = 0;
+	        try {
+	      //      System.setOut(new PrintStream(fileOut));
+	        	Reader rdr = new Reader();
+	        	PipedInputStream in = rdr.read();
+	        	DataInputStream dis = new DataInputStream(in);
+	            reader = new MAVLinkReader(dis);
+	            while (dis.available() > 0) {
+	                MAVLinkMessage msg = reader.getNextMessage();
+	                if (msg != null) {
+	                    nb++;
+	                    if (filter(msg))
+	                    System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
+	                }
+	            }
+	            dis.close();
+
+	            System.out.println("TOTAL BYTES = " + reader.getTotalBytesReceived());
+	            System.out.println("NBMSG (" + nb + ") : " + reader.getNbMessagesReceived() + " NBCRC=" + reader.getBadCRC() + " NBSEQ="
+	                               + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
+	        }
+	        catch (Exception e) {
+	            System.out.println("ERROR : " + e);
+	        }
+	    }
+	
     static public void filterFile(String filename) {
         MAVLinkReader reader;
         String fileOut = filename + "-resultat.filter";

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <excludeFromCompile>
+      <file url="file://$PROJECT_DIR$/org.mavlink.library/src/org/mavlink/messages/MAVLinkMessage.java" />
+      <file url="file://$PROJECT_DIR$/org.mavlink.library/src/org/mavlink/MAVLinkReader.java" />
+      <file url="file://$PROJECT_DIR$/org.mavlink.library/test/org/mavlink/TestMavlinkReader.java" />
+      <file url="file://$PROJECT_DIR$/org.mavlink.library/test/org/mavlink/TestMavlinkFilter.java" />
+      <file url="file://$PROJECT_DIR$/org.mavlink.generator/test/org/mavlink/generator/test/MavlinkGeneratorTest.java" />
+    </excludeFromCompile>
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+      <entry name="!?*.aj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>

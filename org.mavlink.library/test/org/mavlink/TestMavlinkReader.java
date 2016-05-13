@@ -24,6 +24,7 @@ package org.mavlink;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.PipedInputStream;
 import java.io.PrintStream;
 
 import org.mavlink.messages.MAVLinkMessage;
@@ -41,14 +42,44 @@ public class TestMavlinkReader {
     public static void main(String[] args) {
 
         if (args.length != 1) {
-            System.out.println("Usage :");
-            System.out.println("java -cp org.mavlink.library-1.00.jar;org.mavlink.util-1.00.jar org.mavlink.TestMavlinkReader logFile");
-
-            System.exit(1);
+//            System.out.println("Usage :");
+//            System.out.println("java -cp org.mavlink.library-1.00.jar;org.mavlink.util-1.00.jar org.mavlink.TestMavlinkReader logFile");
+//
+//            System.exit(1);
+        	testFromSerial();
         }
-        String filename = args[0];
-        testFile(filename);
-        testBuffer(filename);
+        //String filename = args[0];
+        //testFile(filename);
+        //testBuffer(filename);
+    }
+    
+    static public void testFromSerial() {
+        MAVLinkReader reader;
+  //      String fileOut = filename + "-resultat.out";
+        int nb = 0;
+        try {
+  //          System.setOut(new PrintStream(fileOut));
+        	Reader rdr = new Reader();
+        	PipedInputStream in = rdr.read();
+            DataInputStream dis = new DataInputStream(in);
+            reader = new MAVLinkReader(dis);
+            while (dis.available() > 0) {
+                MAVLinkMessage msg = reader.getNextMessage();
+                //MAVLinkMessage msg = reader.getNextMessageWithoutBlocking();
+                if (msg != null) {
+                    nb++;
+                    System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
+                }
+            }
+            dis.close();
+
+            System.out.println("TOTAL BYTES = " + reader.getTotalBytesReceived());
+            System.out.println("NBMSG (" + nb + ") : " + reader.getNbMessagesReceived() + " NBCRC=" + reader.getBadCRC() + " NBSEQ="
+                               + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
+        }
+        catch (Exception e) {
+            System.out.println("ERROR : " + e);
+        }
     }
 
     static public void testFile(String filename) {
