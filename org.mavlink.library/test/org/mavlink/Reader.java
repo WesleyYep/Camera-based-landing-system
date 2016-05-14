@@ -44,6 +44,7 @@ public class Reader {
 				}
 			}
 		});
+		thread.setDaemon(false);
 		thread.start();
 		return in;
 	}
