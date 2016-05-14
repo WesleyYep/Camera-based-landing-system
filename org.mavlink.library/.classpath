@@ -7,10 +7,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" output="target/classes" path="generated">
-		<attributes>
-			<attribute name="optional" value="true"/>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
+	        <attributes>
+			   <attribute name="optional" value="true"/>
+	           <attribute name="maven.pomderived" value="true"/>
+	       </attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mavlink.util"/>

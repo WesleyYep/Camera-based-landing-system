@@ -10,6 +10,8 @@ public class SerialPortCommunicator {
 	public boolean openPort(String portName) {
 		currentSerialPort = new SerialPort(portName);
 		try {	
+			currentSerialPort.setParams(SerialPort.BAUDRATE_57600, 8, 1, 0);
+			
 			if (currentSerialPort.openPort()) {
 				//setup the port setting
 				currentSerialPort.setParams(

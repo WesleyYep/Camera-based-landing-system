@@ -12,12 +12,15 @@ import java.io.PrintStream;
 import org.mavlink.messages.IMAVLinkMessageID;
 import org.mavlink.messages.MAVLinkMessage;
 
+import jssc.SerialPortList;
+
 /**
  * @author ghelle
  *
  */
 public class TestMavlinkFilter {
 	
+	//filter out these
 	static int[] keys={IMAVLinkMessageID.MAVLINK_MSG_ID_WIND,IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS,IMAVLinkMessageID.MAVLINK_MSG_ID_HWSTATUS,
 			IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_PRESSURE, IMAVLinkMessageID.MAVLINK_MSG_ID_GPS_RAW_INT,IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT,
 			IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW,IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE,
@@ -38,15 +41,19 @@ public class TestMavlinkFilter {
 //        String filename = args[0];
 //        filterFile(filename);
 //        System.exit(0);
-		filterFromSerial();
+    	SerialPortCommunicator spc = new SerialPortCommunicator();
+		System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+		spc.openPort(SerialPortList.getPortNames()[0]);
+		
+		filterFromSerial(spc);
     }
 
-	  static public void filterFromSerial() {
+	  static public void filterFromSerial(SerialPortCommunicator spc) {
 	        MAVLinkReader reader;
 	      //  String fileOut = filename + "-resultat.filter";
 	        int nb = 0;
 	      //      System.setOut(new PrintStream(fileOut));
-	        	Reader rdr = new Reader();
+	        	Reader rdr = new Reader(spc);
 	        	PipedInputStream in = rdr.read();
 	        	DataInputStream dis = new DataInputStream(in);
 	            reader = new MAVLinkReader(dis);

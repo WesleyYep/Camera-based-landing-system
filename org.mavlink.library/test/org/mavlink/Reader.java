@@ -11,10 +11,8 @@ public class Reader {
 	private PipedInputStream in = new PipedInputStream();
 	private PipedOutputStream out;
 	
-	public Reader(){
-		spc = new SerialPortCommunicator();
-		System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-		spc.openPort(SerialPortList.getPortNames()[0]);
+	public Reader(SerialPortCommunicator spc){
+		this.spc = spc;
 		try {
 			out = new PipedOutputStream(in);
 		} catch (IOException e) {
@@ -25,7 +23,6 @@ public class Reader {
 
 	public PipedInputStream read() {
 		Thread thread = new Thread(new Runnable(){
-			@Override
 			public void run() {
 				while (true){
 					byte[] data = spc.readData();
@@ -36,14 +33,10 @@ public class Reader {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-//					if (data[5] == 0) {
-//						//do nothing - heartbeat message
-//					} else {
-//						System.err.println("different message found!!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-//					}
 				}
 			}
 		});
+
 		thread.setDaemon(false);
 		thread.start();
 		return in;

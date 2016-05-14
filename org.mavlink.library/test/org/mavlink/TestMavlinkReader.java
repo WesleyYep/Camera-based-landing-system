@@ -23,12 +23,16 @@
 package org.mavlink;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
 import org.mavlink.messages.MAVLinkMessage;
+
+import jssc.SerialPortList;
 
 /**
  * @author ghelle
@@ -41,25 +45,28 @@ public class TestMavlinkReader {
      * @param args
      */
     public static void main(String[] args) {
+    	SerialPortCommunicator spc = new SerialPortCommunicator();
+		System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+		spc.openPort(SerialPortList.getPortNames()[0]);
+		
+		testSendToSerial(spc);
+    	testFromSerial(spc);
 
-        if (args.length != 1) {
-//            System.out.println("Usage :");
-//            System.out.println("java -cp org.mavlink.library-1.00.jar;org.mavlink.util-1.00.jar org.mavlink.TestMavlinkReader logFile");
-//
-//            System.exit(1);
-        	testFromSerial();
-        }
-        //String filename = args[0];
-        //testFile(filename);
-        //testBuffer(filename);
     }
     
-    static public void testFromSerial() {
+    public static void testSendToSerial(SerialPortCommunicator spc) {
+    	Sender sender = new Sender(spc);
+    	if(sender.send()) {
+    		System.out.println("sent successfully");
+    	}    	
+    }
+    
+    static public void testFromSerial(SerialPortCommunicator spc) {
         MAVLinkReader reader;
   //      String fileOut = filename + "-resultat.out";
         int nb = 0;
   //          System.setOut(new PrintStream(fileOut));
-    	Reader rdr = new Reader();
+    	Reader rdr = new Reader(spc);
     	PipedInputStream in = rdr.read();
         DataInputStream dis = new DataInputStream(in);
         reader = new MAVLinkReader(dis);
