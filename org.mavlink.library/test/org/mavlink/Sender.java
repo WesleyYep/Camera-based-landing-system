@@ -11,6 +11,7 @@ import org.mavlink.messages.MAV_STATE;
 import org.mavlink.messages.ja4rtor.msg_heartbeat;
 import org.mavlink.messages.ja4rtor.msg_mission_item;
 import org.mavlink.messages.ja4rtor.msg_param_request_list;
+import org.mavlink.messages.ja4rtor.msg_param_value;
 import org.mavlink.messages.ja4rtor.msg_request_data_stream;
 
 import jssc.SerialPortList;
@@ -48,7 +49,7 @@ public class Sender {
 		ds.req_message_rate = 10;
 		ds.target_system = 1;
 		ds.target_component = 1;
-		ds.req_stream_id = 1;
+		ds.req_stream_id = 10; //try 2, 6, 10, 11, 12, 01, 03 (10 is orientation AHRS)
 		ds.start_stop = 1;
         byte[] result;
 		try {
@@ -77,4 +78,19 @@ public class Sender {
 		return false;
 	}
 	
+	public boolean send4() {
+		msg_param_value pr = new msg_param_value(1, 1);
+		pr.sequence = sequence++;
+		pr.param_index = 341;
+		//pr.param_id = 341;
+        byte[] result;
+		try {
+			result = pr.encode();
+	        spc.writeData(result);
+	        return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }

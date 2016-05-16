@@ -6,20 +6,22 @@ import jssc.SerialPortException;
 public class SerialPortCommunicator {
 
 	private SerialPort currentSerialPort = null;
+	
+	public boolean isOpened() {
+		return currentSerialPort.isOpened();
+	}
 
 	public boolean openPort(String portName) {
 		currentSerialPort = new SerialPort(portName);
-		try {	
-			currentSerialPort.setParams(SerialPort.BAUDRATE_57600, 8, 1, 0);
-			
+		try {				
 			if (currentSerialPort.openPort()) {
 				//setup the port setting
-				currentSerialPort.setParams(
-						SerialPort.BAUDRATE_115200,
-						SerialPort.DATABITS_8,
-						SerialPort.STOPBITS_1,
-						SerialPort.PARITY_NONE
-						);
+//				currentSerialPort.setParams(
+//						SerialPort.BAUDRATE_115200,
+//						SerialPort.DATABITS_8,
+//						SerialPort.STOPBITS_1,
+//						SerialPort.PARITY_NONE
+//						);
 				return true;
 			} else {
 				return false;

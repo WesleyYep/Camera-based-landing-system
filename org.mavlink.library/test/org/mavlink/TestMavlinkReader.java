@@ -48,7 +48,12 @@ public class TestMavlinkReader {
     	SerialPortCommunicator spc = new SerialPortCommunicator();
 		System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
 		spc.openPort(SerialPortList.getPortNames()[0]);
-		
+		if (!spc.isOpened()) {
+			System.err.println("Port not opened");
+			System.exit(-1);
+		} else {
+			System.out.println("Port opened!");
+		}
 		testSendToSerial(spc);
     	testFromSerial(spc);
 
@@ -56,7 +61,7 @@ public class TestMavlinkReader {
     
     public static void testSendToSerial(SerialPortCommunicator spc) {
     	Sender sender = new Sender(spc);
-    	if(sender.send()) {
+    	if(sender.send2()) {
     		System.out.println("sent successfully");
     	}    	
     }
