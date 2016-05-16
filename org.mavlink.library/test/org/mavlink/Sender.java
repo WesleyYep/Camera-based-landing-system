@@ -43,14 +43,18 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean send2() {
+	public boolean send2(int streamId) {
 		msg_request_data_stream ds = new msg_request_data_stream(1, 1);
 		ds.sequence = sequence++;
 		ds.req_message_rate = 10;
 		ds.target_system = 1;
 		ds.target_component = 1;
-		ds.req_stream_id = 10; //try 2, 6, 10, 11, 12, 01, 03 (10 is orientation AHRS)
-		ds.start_stop = 1;
+		ds.req_stream_id = Math.abs(streamId); //try 2, 6, 10, 11, 12, 01, 03 (10 is orientation AHRS)
+		if (streamId > 0) {
+			ds.start_stop = 1;
+		} else {
+			ds.start_stop = 0;
+		}
         byte[] result;
 		try {
 			result = ds.encode();

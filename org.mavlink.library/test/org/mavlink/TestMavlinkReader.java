@@ -54,14 +54,21 @@ public class TestMavlinkReader {
 		} else {
 			System.out.println("Port opened!");
 		}
-		testSendToSerial(spc);
-    	testFromSerial(spc);
+		if (args.length > 0 && args[0].equals("send")) {
+			testSendToSerial(spc, Integer.parseInt(args[1]));
+		} else if (args.length > 0 && args[0].equals("rec")){
+			testFromSerial(spc);
+		} else {
+			testSendToSerial(spc, 10);
+			testFromSerial(spc);
+			
+		}
 
     }
     
-    public static void testSendToSerial(SerialPortCommunicator spc) {
+    public static void testSendToSerial(SerialPortCommunicator spc, int streamId) {
     	Sender sender = new Sender(spc);
-    	if(sender.send2()) {
+    	if(sender.send2(streamId)) {
     		System.out.println("sent successfully");
     	}    	
     }
