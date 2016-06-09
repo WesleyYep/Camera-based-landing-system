@@ -48,27 +48,40 @@ public class TestMavlinkReader {
     	SerialPortCommunicator spc = new SerialPortCommunicator();
 		System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
 		spc.openPort(SerialPortList.getPortNames()[0]);
+    	Sender sender = new Sender(spc);
+
 		if (!spc.isOpened()) {
 			System.err.println("Port not opened");
 			System.exit(-1);
 		} else {
 			System.out.println("Port opened!");
 		}
-		if (args.length > 0 && args[0].equals("send")) {
-			testSendToSerial(spc, Integer.parseInt(args[1]));
-		} else if (args.length > 0 && args[0].equals("rec")){
+		
+		if (args.length == 0) {
+			System.err.println("No argument entered. Default to send and rec");
+			testSendToSerial(sender, 10);
 			testFromSerial(spc);
-		} else {
-			testSendToSerial(spc, 10);
-			testFromSerial(spc);
-			
+			return;
 		}
-
+		String cmd = args[0];
+		
+		if (cmd.equals("send")) {
+			testSendToSerial(sender, Integer.parseInt(args[1]));
+		} else if (cmd.equals("rec")){
+			testFromSerial(spc);
+		} else if (cmd.equals("arm")) {
+			testArm(sender, args.length > 1 && args[1].equals("true"));
+		} 
+    }
+      
+    public static void testArm(Sender sender, boolean arm) {
+    	if(sender.arm(arm)) {
+    		System.out.println("Successfully set ARMED to: " + arm);
+    	}
     }
     
-    public static void testSendToSerial(SerialPortCommunicator spc, int streamId) {
-    	Sender sender = new Sender(spc);
-    	if(sender.send2(streamId)) {
+    public static void testSendToSerial(Sender sender, int streamId) {
+    	if(sender.send(streamId)) {
     		System.out.println("sent successfully");
     	}    	
     }
