@@ -7,10 +7,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" output="target/classes" path="generated">
-	        <attributes>
-			   <attribute name="optional" value="true"/>
-	           <attribute name="maven.pomderived" value="true"/>
-	       </attributes>
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mavlink.util"/>
@@ -24,6 +24,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV"/>
 	<classpathentry kind="lib" path="jssc-2.8.0.jar"/>
+	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

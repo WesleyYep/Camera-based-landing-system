@@ -6,6 +6,7 @@ import org.mavlink.messages.MAV_CMD;
 import org.mavlink.messages.MAV_COMPONENT;
 import org.mavlink.messages.ja4rtor.msg_command_int;
 import org.mavlink.messages.ja4rtor.msg_command_long;
+import org.mavlink.messages.ja4rtor.msg_manual_control;
 import org.mavlink.messages.ja4rtor.msg_request_data_stream;
 
 public class Sender {
@@ -31,6 +32,30 @@ public class Sender {
         byte[] result;
 		try {
 			result = ds.encode();
+	        spc.writeData(result);
+	        return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public boolean command(String cmd) {
+		msg_manual_control msg = new msg_manual_control();
+		if (cmd.equals("x")) {
+			msg.x = 500;
+			msg.y = 0;
+		} else {
+			msg.x = 0;
+			msg.y = 500;
+		}
+		msg.z = 0;
+		msg.r = 0;
+		msg.buttons = 0;
+		msg.target = 1;
+		byte[] result;
+		try {
+			result = msg.encode();
 	        spc.writeData(result);
 	        return true;
 		} catch (IOException e) {
