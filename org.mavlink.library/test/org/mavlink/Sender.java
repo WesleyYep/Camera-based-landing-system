@@ -2,11 +2,16 @@ package org.mavlink;
 
 import java.io.IOException;
 
+import org.mavlink.messages.MAV_AUTOPILOT;
 import org.mavlink.messages.MAV_CMD;
 import org.mavlink.messages.MAV_COMPONENT;
+import org.mavlink.messages.MAV_MODE_FLAG;
+import org.mavlink.messages.MAV_STATE;
 import org.mavlink.messages.ja4rtor.msg_command_int;
 import org.mavlink.messages.ja4rtor.msg_command_long;
+import org.mavlink.messages.ja4rtor.msg_heartbeat;
 import org.mavlink.messages.ja4rtor.msg_manual_control;
+import org.mavlink.messages.ja4rtor.msg_rc_channels_override;
 import org.mavlink.messages.ja4rtor.msg_request_data_stream;
 
 public class Sender {
@@ -18,7 +23,7 @@ public class Sender {
 	}
 
 	public boolean send(int streamId) {
-		msg_request_data_stream ds = new msg_request_data_stream(1, 1);
+		msg_request_data_stream ds = new msg_request_data_stream(255, 1);
 		ds.sequence = sequence++;
 		ds.req_message_rate = 10;
 		ds.target_system = 1;
@@ -40,19 +45,30 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean command(String cmd) {
-		msg_manual_control msg = new msg_manual_control();
-		if (cmd.equals("x")) {
-			msg.x = 500;
-			msg.y = 0;
-		} else {
-			msg.x = 0;
-			msg.y = 500;
-		}
-		msg.z = 0;
-		msg.r = 0;
-		msg.buttons = 0;
-		msg.target = 1;
+	public boolean command() {
+	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
+		msg.target_system = 1;
+		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
+		msg.chan1_raw = 2000;
+		msg.chan2_raw = 2000;
+		msg.chan3_raw = 2000;
+		msg.chan4_raw = 2000;
+		msg.chan5_raw = 2000;
+		msg.chan6_raw = 2000;
+		msg.chan7_raw = 2000;
+		msg.chan8_raw = 2000;
+//		msg_manual_control msg = new msg_manual_control(255, 1);
+////		if (cmd.equals("x")) {
+//			msg.x = 500;
+//			msg.y = 500;
+////		} else {
+////			msg.x = 500;
+////			msg.y = 500;
+////		}
+//		msg.z = 500;
+//		msg.r = 500;
+//		msg.buttons = 1;
+//		msg.target = 1;
 		byte[] result;
 		try {
 			result = msg.encode();
@@ -75,7 +91,7 @@ public class Sender {
 //		} else {
 //			armMessage.param1 = 0;
 //		}
-		msg_command_long msg = new msg_command_long();
+		msg_command_long msg = new msg_command_long(255,1);
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_SYSTEM_CONTROL;
 
@@ -99,6 +115,25 @@ public class Sender {
 		}
 		return false;
 	}
+
+	public boolean heartbeat() {
+		msg_heartbeat hb = new msg_heartbeat(255, 1);
+	    hb.sequence = sequence++;
+	    hb.autopilot = MAV_AUTOPILOT.MAV_AUTOPILOT_PX4;
+	    hb.base_mode = MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED;
+	    hb.custom_mode = 0; //custom mode
+	    hb.mavlink_version = 3;
+	    hb.system_status = MAV_STATE.MAV_STATE_ACTIVE;
+	    byte[] result;
+		try {
+			result = hb.encode();
+	        spc.writeData(result);
+	        return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+    }
 	
 //	public boolean send2() {
 //	msg_heartbeat hb = new msg_heartbeat(1, 1);

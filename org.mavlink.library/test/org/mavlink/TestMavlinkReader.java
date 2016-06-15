@@ -92,31 +92,50 @@ public class TestMavlinkReader {
 					testCommands(sender);
 				} else if (cmd.equals("arm")) {
 					testArm(sender, args.length > 1 && args[1].equals("true"));
+				} else if (cmd.equals("hb")) {
+					testHeartBeat(sender);
 				} 
     		}
     	});
     	
     	if (args.length < 2) {
-    		t.start();
+//    		t.start();
     	}
     	t2.start();
     	
     }
     
-    private static void testCommands(Sender sender) {
-		Scanner sc = new Scanner(System.in);
-    	while (true) {
-    		String cmd = sc.next();
-    		if (cmd.equals("x") || cmd.equals("y")) {
-    			if (sender.command(cmd)) {
-    				System.out.println("sent message: move in " + cmd + " direction");
-    			} else {
-    				System.out.println("Could not send.");
-    			}
-    		} else {
-    			System.out.println("Invalid command");
-    		}
+	private static void testHeartBeat(Sender sender) {
+		if(sender.heartbeat()) {
+    		System.out.println("Successfully set heartbeat");
     	}
+	}
+    
+    private static void testCommands(Sender sender) {
+//		Scanner sc = new Scanner(System.in);
+		while (true) {
+			if(sender.heartbeat()) {
+	    		System.out.println("Successfully set heartbeat");
+	    	}
+			if (sender.command()) {
+				System.out.println("sent manual move message");
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+		}
+//    	while (true) {
+//    		String cmd = sc.next();
+//    		if (cmd.equals("x") || cmd.equals("y")) {
+//    			if (sender.command(cmd)) {
+//    				System.out.println("sent message: move in " + cmd + " direction");
+//    			} else {
+//    				System.out.println("Could not send.");
+//    			}
+//    		} else {
+//    			System.out.println("Invalid command");
+//    		}
+//    	}
     }
       
     private static void testAngle(Sender sender, SerialPortCommunicator spc) {
