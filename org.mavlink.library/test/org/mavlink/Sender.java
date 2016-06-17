@@ -5,21 +5,28 @@ import java.io.IOException;
 import org.mavlink.messages.MAV_AUTOPILOT;
 import org.mavlink.messages.MAV_CMD;
 import org.mavlink.messages.MAV_COMPONENT;
+import org.mavlink.messages.MAV_FRAME;
+import org.mavlink.messages.MAV_MODE;
 import org.mavlink.messages.MAV_MODE_FLAG;
 import org.mavlink.messages.MAV_STATE;
 import org.mavlink.messages.ja4rtor.msg_command_int;
 import org.mavlink.messages.ja4rtor.msg_command_long;
 import org.mavlink.messages.ja4rtor.msg_heartbeat;
+import org.mavlink.messages.ja4rtor.msg_landing_target;
 import org.mavlink.messages.ja4rtor.msg_manual_control;
 import org.mavlink.messages.ja4rtor.msg_rc_channels_override;
 import org.mavlink.messages.ja4rtor.msg_request_data_stream;
+import org.mavlink.messages.ja4rtor.msg_set_mode;
+import org.mavlink.messages.ja4rtor.msg_set_position_target_local_ned;
 
 public class Sender {
 	private SerialPortCommunicator spc;
 	private int sequence = 0;
+	private long startTime;
 	
 	public Sender(SerialPortCommunicator spc){
 		this.spc = spc;
+		startTime = System.currentTimeMillis();
 	}
 
 	public boolean send(int streamId) {
@@ -45,30 +52,33 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean command() {
-	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
+	public boolean command(int value) {
+//	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
+//		msg.target_system = 1;
+//		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
+//		msg.chan1_raw = value;
+//		msg.chan2_raw = value;
+//		msg.chan3_raw = value;
+//		msg.chan4_raw = value;
+//		msg.chan5_raw = 65535; //UINT_16 max
+//		msg.chan6_raw = 65535;
+//		msg.chan7_raw = 65535;
+//		msg.chan8_raw = 65535;
+		msg_set_position_target_local_ned msg = new msg_set_position_target_local_ned(255, 1);
+		msg.time_boot_ms = System.currentTimeMillis() - startTime;
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
-		msg.chan1_raw = 2000;
-		msg.chan2_raw = 2000;
-		msg.chan3_raw = 2000;
-		msg.chan4_raw = 2000;
-		msg.chan5_raw = 2000;
-		msg.chan6_raw = 2000;
-		msg.chan7_raw = 2000;
-		msg.chan8_raw = 2000;
-//		msg_manual_control msg = new msg_manual_control(255, 1);
-////		if (cmd.equals("x")) {
-//			msg.x = 500;
-//			msg.y = 500;
-////		} else {
-////			msg.x = 500;
-////			msg.y = 500;
-////		}
-//		msg.z = 500;
-//		msg.r = 500;
-//		msg.buttons = 1;
-//		msg.target = 1;
+		msg.coordinate_frame = MAV_FRAME.MAV_FRAME_LOCAL_OFFSET_NED;
+		msg.type_mask = 0b0000000000000000; //ignore everything except velocity
+		msg.x = 10;
+		msg.y = 10;
+		msg.z = -10;
+		msg.vx = 1;
+		msg.vy = 1;
+		msg.vz = -1;
+		msg.afx = 1;
+		msg.afy = 1;
+		msg.afz = 1;
 		byte[] result;
 		try {
 			result = msg.encode();
@@ -80,17 +90,27 @@ public class Sender {
 		return false;
 	}
 	
+	public void land(float radians) {
+		msg_landing_target msg = new msg_landing_target(255,1);
+		msg.time_usec = (System.currentTimeMillis() - startTime)*1000;
+		msg.target_num = 1;
+		msg.frame = MAV_FRAME.MAV_FRAME_GLOBAL;
+		msg.angle_x = radians;
+		msg.angle_y = 0;
+		msg.distance = 0;
+		msg.size_x = 0;
+		msg.size_y = 0;
+		
+        byte[] result;
+		try {
+			result = msg.encode();
+	        spc.writeData(result);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public boolean arm(boolean arm) {
-//		msg_command_int armMessage = new msg_command_int(1,0);
-//		
-//		armMessage.target_system = 1;
-//		armMessage.target_component = 0;
-//		armMessage.command = 400;
-//		if (arm) {
-//			armMessage.param1 = 1;
-//		} else {
-//			armMessage.param1 = 0;
-//		}
 		msg_command_long msg = new msg_command_long(255,1);
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_SYSTEM_CONTROL;
@@ -134,55 +154,40 @@ public class Sender {
 		}
 		return false;
     }
+
+	public void mode(String mode, boolean armed) {
+		msg_set_mode msg = new msg_set_mode(255,1);
+		msg.target_system = 1;
+
+		if (mode.equals("stabilize")) {
+			System.out.println("Setting to stabilize mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1; //stabilize mode is 81 for APM
+			msg.custom_mode = 0; //custom mode 0 is default
+		} else if (mode.equals("land")){
+			System.out.println("Setting to land mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
+			msg.custom_mode = 9; //custom mode 9 = land
+		} else if (mode.equals("guided")){
+			System.out.println("Setting to guided mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_GUIDED_DISARMED + 1;
+			msg.custom_mode = 4; //custom mode 4 = guided for APM
+		} else {
+			System.out.println("Setting to stabilize mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1; //default
+			msg.custom_mode = 0; 
+		}
+		if (armed) {
+			msg.base_mode += 128;
+			System.out.println("Setting base mode to: " + msg.base_mode);
+		}
+
+        byte[] result;
+		try {
+			result = msg.encode();
+	        spc.writeData(result);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
-//	public boolean send2() {
-//	msg_heartbeat hb = new msg_heartbeat(1, 1);
-//    hb.sequence = sequence++;
-//    hb.autopilot = MAV_AUTOPILOT.MAV_AUTOPILOT_PX4;
-//    hb.base_mode = MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED;
-//    hb.custom_mode = 0; //custom mode
-//    hb.mavlink_version = 3;
-//    hb.system_status = MAV_STATE.MAV_STATE_POWEROFF;
-//    byte[] result;
-//	try {
-//		result = hb.encode();
-//        spc.writeData(result);
-//        return true;
-//	} catch (IOException e) {
-//		e.printStackTrace();
-//	}
-//	return false;
-//}
-	
-//	public boolean send3() {
-//		msg_param_request_list pr = new msg_param_request_list(1, 1);
-//		pr.sequence = sequence++;
-//		pr.target_system = 1;
-//		pr.target_component = 1;
-//        byte[] result;
-//		try {
-//			result = pr.encode();
-//	        spc.writeData(result);
-//	        return true;
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		return false;
-//	}
-//	
-//	public boolean send4() {
-//		msg_param_value pr = new msg_param_value(1, 1);
-//		pr.sequence = sequence++;
-//		pr.param_index = 341;
-//		//pr.param_id = 341;
-//        byte[] result;
-//		try {
-//			result = pr.encode();
-//	        spc.writeData(result);
-//	        return true;
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		return false;
-//	}
 }

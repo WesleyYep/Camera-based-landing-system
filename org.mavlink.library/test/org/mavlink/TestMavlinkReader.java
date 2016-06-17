@@ -84,17 +84,25 @@ public class TestMavlinkReader {
 				
 				if (cmd.equals("send")) {
 					testSendToSerial(sender, Integer.parseInt(args[1]));
-				} else if (cmd.equals("rec")){
+				} else if (cmd.equals("rec")){  // rec
+					if (args.length > 1 && args[1].equals("hb")) { // rec hb
+						sender.send(0);
+					}
 					testFromSerial(spc);
 				} else if (cmd.equals("angle")){
 					testAngle(sender, spc);
 				} else if (cmd.equals("cmd")) {
-					testCommands(sender);
+					testCommands(sender, args.length > 1 ? Integer.parseInt(args[1]) : 1300);
 				} else if (cmd.equals("arm")) {
 					testArm(sender, args.length > 1 && args[1].equals("true"));
 				} else if (cmd.equals("hb")) {
 					testHeartBeat(sender);
-				} 
+				} else if (cmd.equals("mode")) {
+					sender.heartbeat();
+					sender.mode(args.length > 1 ? args[1] : "", args.length > 2 && args[2].equals("armed"));
+				} else if (cmd.equals("land")) {
+					land(sender, args[1]);
+				}
     		}
     	});
     	
@@ -105,37 +113,37 @@ public class TestMavlinkReader {
     	
     }
     
+    private static void land(Sender sender, String radiansString) {
+    	while (true) {
+			if(sender.heartbeat()) {
+	    		System.out.println("Successfully set heartbeat");
+	    	}
+			sender.land(Float.parseFloat(radiansString));
+			System.out.println("sent land position");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+		}
+	}    
+    
 	private static void testHeartBeat(Sender sender) {
 		if(sender.heartbeat()) {
     		System.out.println("Successfully set heartbeat");
     	}
 	}
     
-    private static void testCommands(Sender sender) {
-//		Scanner sc = new Scanner(System.in);
+    private static void testCommands(Sender sender, int value) {
 		while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
 	    	}
-			if (sender.command()) {
+			if (sender.command(value)) {
 				System.out.println("sent manual move message");
 			}
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
 		}
-//    	while (true) {
-//    		String cmd = sc.next();
-//    		if (cmd.equals("x") || cmd.equals("y")) {
-//    			if (sender.command(cmd)) {
-//    				System.out.println("sent message: move in " + cmd + " direction");
-//    			} else {
-//    				System.out.println("Could not send.");
-//    			}
-//    		} else {
-//    			System.out.println("Invalid command");
-//    		}
-//    	}
     }
       
     private static void testAngle(Sender sender, SerialPortCommunicator spc) {
