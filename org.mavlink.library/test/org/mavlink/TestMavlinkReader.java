@@ -55,7 +55,11 @@ public class TestMavlinkReader {
     	Thread t = new Thread(new Runnable(){
 			@Override
 			public void run() {
-				TestQR.start();
+				try {
+					TestQR.start();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
     	});
     	
@@ -107,9 +111,9 @@ public class TestMavlinkReader {
     	});
     	
     	if (args.length < 2) {
-//    		t.start();
+    		t.start();
     	}
-    	t2.start();
+//    	t2.start();
     	
     }
     

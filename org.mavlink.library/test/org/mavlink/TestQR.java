@@ -27,9 +27,14 @@ public class TestQR {
 
     // Start of Main Loop
 //------------------------------------------------------------------------------------------------------------------------
-    public static void start() {
-    //    VideoCapture capture = new VideoCapture("test1.mp4");
-        VideoCapture capture = new VideoCapture(0);
+    public static void start() throws Exception {
+    	//set up network connection
+    	Client client = new Client("127.0.0.1", 55555, data ->{
+			System.out.println(data.toString());
+		});
+		client.startConnection();
+        VideoCapture capture = new VideoCapture("test3.mp4");
+    //    VideoCapture capture = new VideoCapture(0);
 
      //   MyFrame frame = new MyFrame();
     //    frame.setVisible(true);
@@ -238,7 +243,8 @@ public class TestQR {
                     actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
                     System.out.println("adjusted relative x is: " + actualX);	
                     System.out.println("adjusted relative y is: " + actualY);	
-                    
+                    client.send("pos:" + actualX + ":" + actualY);
+                   // Thread.sleep(1000);
                     //Draw contours on the image
                     if (DBG == 1) {
                     	Imgproc.drawContours(image, contours, top, new Scalar(255, 200, 0), 2, 8, hierarchy, 0, new Point());
@@ -326,7 +332,6 @@ public class TestQR {
 //            imshow ( "QR code", qr_thres );
 
         }	// End of 'while' loop
-
         return;
     }
 
