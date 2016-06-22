@@ -27,13 +27,17 @@ public class TestQR {
 
     // Start of Main Loop
 //------------------------------------------------------------------------------------------------------------------------
-    public static void start() throws Exception {
+    public static void start() {
     	//set up network connection
     	Client client = new Client("127.0.0.1", 55555, data ->{
 			System.out.println(data.toString());
 		});
-		client.startConnection();
-        VideoCapture capture = new VideoCapture("test3.mp4");
+		try {
+			client.startConnection();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        VideoCapture capture = new VideoCapture("test1.mp4");
     //    VideoCapture capture = new VideoCapture(0);
 
      //   MyFrame frame = new MyFrame();
@@ -63,8 +67,7 @@ public class TestQR {
      //   Mat qr,qr_raw,qr_gray,qr_thres;
 
         int key = 0;
-        while(key != 'q')				// While loop to query for Image Input frame
-        {
+        while(key != 'q') {				// While loop to query for Image Input frame
             List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
             MatOfInt4 hierarchy = new MatOfInt4();
 
@@ -87,9 +90,12 @@ public class TestQR {
             Imgproc.cvtColor(image,gray, Imgproc.COLOR_RGB2GRAY);		// Convert Image captured from Image Input to GrayScale
             Imgproc.Canny(gray, edges, 100 , 200, 3, false);		// Apply Canny edge detection on the gray image
             //could try true ^
-
-            Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE); // Find contours with hierarchy
-
+            try {
+            	Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE); // Find contours with hierarchy
+            } catch (Exception e) {
+            	System.out.println("can't find contours");
+            }
+            
            // System.out.println("contour size: " + contours.size());
             mark = 0;								// Reset all detected marker count for this frame
 
@@ -243,7 +249,11 @@ public class TestQR {
                     actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
                     System.out.println("adjusted relative x is: " + actualX);	
                     System.out.println("adjusted relative y is: " + actualY);	
-                    client.send("pos:" + actualX + ":" + actualY);
+                    try {
+						client.send("pos:" + actualX + ":" + actualY);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
                    // Thread.sleep(1000);
                     //Draw contours on the image
                     if (DBG == 1) {
@@ -332,7 +342,9 @@ public class TestQR {
 //            imshow ( "QR code", qr_thres );
 
         }	// End of 'while' loop
-        return;
+        while (true) {
+        	
+        }
     }
 
 // End of Main Loop

@@ -170,7 +170,11 @@ public class Sender {
 		} else if (mode.equals("guided")){
 			System.out.println("Setting to guided mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_GUIDED_DISARMED + 1;
-			msg.custom_mode = 4; //custom mode 4 = guided for APM
+			msg.custom_mode = 4; //custom mode 4 = guided for APM copter
+		}  else if (mode.equals("loiter")){
+			System.out.println("Setting to loiter mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
+			msg.custom_mode = 5; //custom mode 5 = LOITER for APM copter
 		} else {
 			System.out.println("Setting to stabilize mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1; //default
