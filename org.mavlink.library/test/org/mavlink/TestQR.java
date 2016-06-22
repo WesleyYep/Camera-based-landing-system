@@ -221,7 +221,7 @@ public class TestQR {
                     cv_updateCornerOr(orientation, tempO, O); 			// Re-arrange marker corners w.r.t orientation of the QR code
 
                     boolean iflag = getIntersectionPoint(M.get(1),M.get(3),L.get(0),L.get(2),N);
-                    
+                    System.out.println("distance: " + cv_distance(M.get(1),L.get(0)));
 
                //     System.out.println("src size: " + src.size() + " -  dest size: " + dst.size());
                     if (!iflag) {
