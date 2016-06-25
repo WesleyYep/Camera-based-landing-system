@@ -56,7 +56,7 @@ public class TestMavlinkReader {
 			@Override
 			public void run() {
 				try {
-					TestQR.start();
+					TestColourDetection.start();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
