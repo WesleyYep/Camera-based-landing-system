@@ -29,7 +29,8 @@ public class TestQR {
 //------------------------------------------------------------------------------------------------------------------------
     public static void start() {
     	//set up network connection
-    	Client client = new Client("127.0.0.1", 55555, data ->{
+		//Client client = new Client("127.0.0.1", 55555, data ->{
+		Client client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());
 		});
 		try {
@@ -37,8 +38,8 @@ public class TestQR {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-        VideoCapture capture = new VideoCapture("test1.mp4");
-    //    VideoCapture capture = new VideoCapture(0);
+    //    VideoCapture capture = new VideoCapture("test1.mp4");
+        VideoCapture capture = new VideoCapture(0);
 
      //   MyFrame frame = new MyFrame();
     //    frame.setVisible(true);

@@ -24,8 +24,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV"/>
 	<classpathentry kind="lib" path="jssc-2.8.0.jar"/>
 	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="lib" path="C:/Users/Wesley/Downloads/opencv/build/java/opencv-310.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

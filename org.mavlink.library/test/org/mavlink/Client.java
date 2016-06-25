@@ -43,22 +43,22 @@ public class Client extends NetworkConnection {
 		return port;
 	}
 	
-	
-	public static void main(String[] args) throws Exception {
-		Client client = new Client("127.0.0.1", 55555, data ->{
-			System.out.println(data.toString());
-		});
-		client.startConnection();
-
-		while (true) {
-			Thread.sleep(5000);
-			try{
-				client.send("Air station response");
-				client.send("pos:210.11:70.98");
-			}catch (Exception e){
-				System.out.println("failed");
-			}
-		}
-	}
+//	
+//	public static void main(String[] args) throws Exception {
+//		Client client = new Client("127.0.0.1", 55555, data ->{
+//			System.out.println(data.toString());
+//		});
+//		client.startConnection();
+//
+//		while (true) {
+//			Thread.sleep(5000);
+//			try{
+//				client.send("Air station response");
+//				client.send("pos:210.11:70.98");
+//			}catch (Exception e){
+//				System.out.println("failed");
+//			}
+//		}
+//	}
 	
 }

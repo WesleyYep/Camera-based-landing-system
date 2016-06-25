@@ -39,21 +39,23 @@ public abstract class NetworkConnection {
 		
 		@Override
 		public void run(){
-			try(ServerSocket server = isServer() ? new ServerSocket(getPort()) : null;
-					Socket socket = isServer() ? server.accept() : new Socket(getIP(),getPort());
-					ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-					ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-				this.socket = socket;
-				this.out = out;
-				socket.setTcpNoDelay(true);
-				System.out.println("----------------------");
-				while(true){
-					Serializable data = (Serializable) in.readObject();
-					onReceiveCallback.accept(data);
+			while (true) {
+				try(ServerSocket server = isServer() ? new ServerSocket(getPort()) : null;
+						Socket socket = isServer() ? server.accept() : new Socket(getIP(),getPort());
+						ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+						ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+	
+					this.socket = socket;
+					this.out = out;
+					socket.setTcpNoDelay(true);
+					System.out.println("----------------------");
+					while(true){
+						Serializable data = (Serializable) in.readObject();
+						onReceiveCallback.accept(data);
+					}
+				}catch (Exception e){
+					onReceiveCallback.accept("Connection closed");
 				}
-			}catch (Exception e){
-				onReceiveCallback.accept("Connection closed");
 			}
 		}
 	}
