@@ -132,8 +132,8 @@ public class TestColourDetection {
 	        		
                     int centreX = width/2;
                     int centreY = height/2;
-                    double relativeY = avX - centreY;
-                    double relativeX = avY - centreX;
+                    double relativeY = avY - centreY;
+                    double relativeX = avX - centreX;
                     System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
                     double aovHorizontal = Math.toRadians(54);
                     double aovVertical = Math.toRadians(41);
@@ -145,7 +145,7 @@ public class TestColourDetection {
                     actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
                     System.out.println("adjusted relative pos is - x: " + actualX + " - y: " + actualY);	
 	        		try {
-						client.send("pos:" + avX + ":" + avY);
+						client.send("pos:" + actualX + ":" + actualY);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
