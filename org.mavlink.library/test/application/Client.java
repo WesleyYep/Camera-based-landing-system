@@ -54,7 +54,7 @@ public class Client extends NetworkConnection {
 			Thread.sleep(5000);
 			try{
 				client.send("Air station response");
-				client.send("pos:210:70");
+				client.send("pos:-78:-6");
 			}catch (Exception e){
 				System.out.println("failed");
 			}

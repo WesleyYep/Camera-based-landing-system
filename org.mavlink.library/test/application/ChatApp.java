@@ -22,6 +22,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 
 public class ChatApp extends Application {
@@ -35,7 +36,7 @@ public class ChatApp extends Application {
 	private HBox topMenu;
 	private HBox botMenu;
 	private Pane display;
-	private Circle landingPad;
+	private Polygon landingPad;
 	private NetworkConnection connection = createServer();
 
 	private Parent createContent(){
@@ -74,14 +75,13 @@ public class ChatApp extends Application {
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5,btn,arm);
 		
-		Rectangle drone = new Rectangle(182, 98, 20, 20);
-		landingPad = new Circle(70,70, 20);
+//		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
+		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
-        display = new Pane(drone, landingPad);
+        display = new Pane(landingPad);
         display.setPrefSize(384, 216);
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
-		
 		return root;
 	}
 
@@ -121,22 +121,13 @@ public class ChatApp extends Application {
 				messages.appendText(data.toString() + "\n");
 				if (data.toString().startsWith("pos:")) {
 					//pos:x:y
-					landingPad.setCenterX(adjustHorizontal(Double.parseDouble(data.toString().split(":")[1])));
-					landingPad.setCenterY(adjustVertical(Double.parseDouble(data.toString().split(":")[2])));
+					double x = Double.parseDouble(data.toString().split(":")[1]);
+					double y = Double.parseDouble(data.toString().split(":")[2]);
+					landingPad.setRotate(Math.toDegrees(Math.atan2(-y, x))+90);
 				}
 			});
 		});
 	}
-
-	private double adjustVertical(double value) {
-		return (display.getHeight()/2) + value;
-
-	}
-
-	private double adjustHorizontal(double value) {
-		return (display.getWidth()/2) + value;
-	}
-
 
 	public static void main(String[] args) {
 		launch(args);
