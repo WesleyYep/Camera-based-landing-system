@@ -48,17 +48,17 @@ public class TestColourDetection {
 	 	cap.read(imgTmp); 
 	 	int width = imgTmp.width();
 	 	int height = imgTmp.height();
+        Mat imgOriginal = new Mat( imgTmp.size(), CvType.CV_8UC3 );
+	 	Mat imgHSV = new Mat( imgTmp.size(), CvType.CV_8UC3 );
+        Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	 
 	    while (true) {
-	        Mat imgOriginal = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	        boolean bSuccess = cap.read(imgOriginal); // read a new frame from video
 	        if (!bSuccess) {//if not success, break loop
 	        	 System.out.println("Cannot read a frame from video stream");
 	             break;
 	        }
-	        Mat imgHSV = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-	        Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	      
 	        Core.inRange(imgHSV, new Scalar(0,140,140), new Scalar(10,255,255), imgThresholded);
 	        
