@@ -1,17 +1,9 @@
 package org.mavlink;
-import java.awt.FlowLayout;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-
 import org.opencv.core.*;
-import org.opencv.features2d.FeatureDetector;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
@@ -106,7 +98,7 @@ public class TestColourDetection {
 	        						first = ratio;
 	        					} else if (Math.abs(ratio - first) < difference){
 	        						difference = Math.abs(ratio - first);
-	        						actualMarkers.add(markers.get(i).getKey());
+	        						actualMarkers.add(markers.get(i).getKey()); //needs to be 2 other marker with similar distance/area ratios
 	        						break;
 	        					}
 	        				}
@@ -128,7 +120,7 @@ public class TestColourDetection {
 	        		double avX = totalX / 3;
 	        		double avY = totalY / 3;
 		  //      	System.out.println("AVERAGE: x: " + avX + " - y: " + avY);
-	        		Imgproc.circle(imgOriginal, new Point(avX, avY), 2, new Scalar(0,255,0),5);
+//	        		Imgproc.circle(imgOriginal, new Point(avX, avY), 2, new Scalar(0,255,0),5);
 	        		
                     int centreX = width/2;
                     int centreY = height/2;
@@ -143,9 +135,18 @@ public class TestColourDetection {
                     double h = 30; //in m
                     actualX = h * Math.tan(roll) - (-relativeX/width)*h*(Math.tan(roll+aovHorizontal) - Math.tan(roll-aovHorizontal)); // in m
                     actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
-                    System.out.println("adjusted relative pos is - x: " + actualX + " - y: " + actualY);	
+                    System.out.println("adjusted relative pos is - x: " + actualX + " - y: " + actualY);
+                    
+                    //now find distance
+                    double dist1 = distance(actualMarkers.get(0), actualMarkers.get(1));
+                    double dist2 = distance(actualMarkers.get(0), actualMarkers.get(2));
+                    double dist3 = distance(actualMarkers.get(1), actualMarkers.get(2));
+                    double maxDistance = Math.max(Math.max(dist1,dist2), dist3);
+                    System.out.println("Max distance is: " + maxDistance);
+                    //send
 	        		try {
 						client.send("pos:" + actualX + ":" + actualY);
+						client.send("dist:"+ maxDistance);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

@@ -33,6 +33,7 @@ import java.util.Scanner;
 
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
+import org.mavlink.messages.ja4rtor.msg_global_position_int;
 
 import jssc.SerialPortList;
 
@@ -46,6 +47,8 @@ public class TestMavlinkReader {
 	public static float pitch = 0;
 	public static float roll = 0;
 	public static float yaw = 0;
+	private static float initialAltitude = 0;
+	public static float altitude = 0;
 	
     /**
      * @param args
@@ -77,14 +80,10 @@ public class TestMavlinkReader {
 				} else {
 					System.out.println("Port opened!");
 				}
-				
-				if (args.length == 0) {
-					System.err.println("No argument entered. Default to send and rec");
-					testSendToSerial(sender, 10);
-					testFromSerial(spc);
-					return;
+				String cmd = "";
+				if (args.length != 0) {
+					cmd = args[0];
 				}
-				String cmd = args[0];
 				
 				if (cmd.equals("send")) {
 					testSendToSerial(sender, Integer.parseInt(args[1]));
@@ -106,6 +105,8 @@ public class TestMavlinkReader {
 					sender.mode(args.length > 1 ? args[1] : "", args.length > 2 && args[2].equals("armed"));
 				} else if (cmd.equals("land")) {
 					land(sender, args[1]);
+				} else {
+					testAngle(sender, spc);
 				}
     		}
     	});
@@ -113,7 +114,7 @@ public class TestMavlinkReader {
     	if (args.length < 2) {
     		t.start();
     	}
-//    	t2.start();
+    	t2.start();
     	
     }
     
@@ -152,8 +153,9 @@ public class TestMavlinkReader {
       
     private static void testAngle(Sender sender, SerialPortCommunicator spc) {
     	sender.send(0); //stops all streams
-    	sender.send(10); //retrieves HB
-    	System.out.println("Sent request for orientation messages");
+		sender.send(6); // barometer for altitude
+		sender.send(10); //pitch, yaw, roll
+    	System.out.println("Sent request for orientation/altitude messages");
     	try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
@@ -175,6 +177,10 @@ public class TestMavlinkReader {
                     yaw = ((msg_ahrs2)msg).yaw;
                     roll = ((msg_ahrs2)msg).roll;
                     System.out.println("pitch=" + pitch + " - roll="+roll + " - yaw=" +yaw);
+                } else if (msg != null && msg.messageType == msg_global_position_int.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
+                    nb++;
+                	altitude = ((msg_global_position_int)msg).alt - initialAltitude;
+                	System.out.println("altitude=" + altitude);
                 }
             }
         } catch (IOException e) {

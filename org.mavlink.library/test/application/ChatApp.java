@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -24,6 +25,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 
 public class ChatApp extends Application {
 
@@ -38,6 +40,8 @@ public class ChatApp extends Application {
 	private Pane display;
 	private Polygon landingPad;
 	private NetworkConnection connection = createServer();
+	private Label distanceText = new Label("Total distance: ");
+	private Label horizontalText = new Label("Horizontal distance: ");
 
 	private Parent createContent(){
 		messages.setPrefHeight(550);
@@ -78,7 +82,8 @@ public class ChatApp extends Application {
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
-        display = new Pane(landingPad);
+        display = new Pane(landingPad, distanceText/*, horizontalText*/);
+        horizontalText.setTranslateY(20);
         display.setPrefSize(384, 216);
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
@@ -123,7 +128,13 @@ public class ChatApp extends Application {
 					//pos:x:y
 					double x = Double.parseDouble(data.toString().split(":")[1]);
 					double y = Double.parseDouble(data.toString().split(":")[2]);
-					landingPad.setRotate(Math.toDegrees(Math.atan2(-y, x))+90);
+					landingPad.setRotate(Math.toDegrees(Math.atan2(y, x)));
+				} else if (data.toString().startsWith("dist:")) {
+					double perceivedPixelLength = Double.parseDouble(data.toString().split(":")[1]);
+					double actualSizeMetres = 0.15;
+					double f = (110 * 1)/actualSizeMetres; //(pixel * distance)/actual
+					double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
+					distanceText.setText("Total Distance: " + actualDistance);
 				}
 			});
 		});
