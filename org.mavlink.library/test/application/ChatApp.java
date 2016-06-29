@@ -41,7 +41,8 @@ public class ChatApp extends Application {
 	private Polygon landingPad;
 	private NetworkConnection connection = createServer();
 	private Label distanceText = new Label("Total distance: ");
-	private Label horizontalText = new Label("Horizontal distance: ");
+	private Label altitudeText = new Label("Altitude: ");
+	private Label positionText = new Label("Relative Position: ");
 
 	private Parent createContent(){
 		messages.setPrefHeight(550);
@@ -82,8 +83,9 @@ public class ChatApp extends Application {
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
-        display = new Pane(landingPad, distanceText/*, horizontalText*/);
-        horizontalText.setTranslateY(20);
+        display = new Pane(landingPad, distanceText, altitudeText, positionText);
+        altitudeText.setTranslateY(15);
+        positionText.setTranslateY(30);
         display.setPrefSize(384, 216);
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
@@ -126,15 +128,15 @@ public class ChatApp extends Application {
 				messages.appendText(data.toString() + "\n");
 				if (data.toString().startsWith("pos:")) {
 					//pos:x:y
-					double x = Double.parseDouble(data.toString().split(":")[1]);
-					double y = Double.parseDouble(data.toString().split(":")[2]);
+					String[] arr = data.toString().split(":");
+					double x = Double.parseDouble(arr[1]);
+					double y = Double.parseDouble(arr[2]);
 					landingPad.setRotate(Math.toDegrees(Math.atan2(y, x)));
+					positionText.setText("Relative Position: x=" + arr[1] + " y=" + arr[2]);
 				} else if (data.toString().startsWith("dist:")) {
-					double perceivedPixelLength = Double.parseDouble(data.toString().split(":")[1]);
-					double actualSizeMetres = 0.15;
-					double f = (110 * 1)/actualSizeMetres; //(pixel * distance)/actual
-					double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
-					distanceText.setText("Total Distance: " + actualDistance);
+					distanceText.setText("Total Distance: " + data.toString().split(":")[1]);
+				} else if (data.toString().startsWith("alt:")) {
+					altitudeText.setText("Altitude: " + data.toString().split(":")[1]);
 				}
 			});
 		});

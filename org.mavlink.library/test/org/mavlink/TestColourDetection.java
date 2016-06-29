@@ -131,21 +131,38 @@ public class TestColourDetection {
                     double aovVertical = Math.toRadians(41);
                     double pitch = TestMavlinkReader.pitch;// Math.toRadians(0);
                     double roll = TestMavlinkReader.roll;// Math.toRadians(0);
-                    double actualX, actualY;
-                    double h = 30; //in m
-                    actualX = h * Math.tan(roll) - (-relativeX/width)*h*(Math.tan(roll+aovHorizontal) - Math.tan(roll-aovHorizontal)); // in m
-                    actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
-                    System.out.println("adjusted relative pos is - x: " + actualX + " - y: " + actualY);
+//                    double actualX, actualY;
+//                    double h = 30; //in m
+//                    actualX = h * Math.tan(roll) - (-relativeX/width)*h*(Math.tan(roll+aovHorizontal) - Math.tan(roll-aovHorizontal)); // in m
+//                    actualY = h * Math.tan(pitch) - (-relativeY/height)*h*(Math.tan(pitch+aovVertical) - Math.tan(pitch-aovVertical)); // in m
+//                    System.out.println("adjusted relative pos is - x: " + actualX + " - y: " + actualY);
                     
                     //now find distance
                     double dist1 = distance(actualMarkers.get(0), actualMarkers.get(1));
                     double dist2 = distance(actualMarkers.get(0), actualMarkers.get(2));
                     double dist3 = distance(actualMarkers.get(1), actualMarkers.get(2));
                     double maxDistance = Math.max(Math.max(dist1,dist2), dist3);
-                    System.out.println("Max distance is: " + maxDistance);
+					double perceivedPixelLength = maxDistance;
+					double actualSizeMetres = 0.15;
+					double f = (110 * 1)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
+					double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
+                    System.out.println("Distance is: " + actualDistance);
+                    
+                    //now find altitude
+                    double betaX = Math.atan(Math.tan(aovHorizontal/2) * relativeX / (width/2));
+                    double betaY = Math.atan(Math.tan(aovVertical/2) * relativeY / (height/2));
+                    double thetaX = roll + betaX;
+                    double thetaY = pitch + betaY;
+                    double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
+
+                    //now find x and y offset
+                    double xOffset = altitude * Math.tan(thetaX);
+                    double yOffset = altitude * Math.tan(thetaY);
+                    
                     //send
 	        		try {
-						client.send("pos:" + actualX + ":" + actualY);
+						client.send("pos:" + xOffset + ":" + yOffset);
+						client.send("alt:" + altitude);
 						client.send("dist:"+ maxDistance);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -180,6 +197,10 @@ public class TestColourDetection {
 //        	imgFrame.render(imgOriginal); //show the original image
 	    }
 	    return;
+	}
+
+	private static double squared(double value) {
+		return Math.pow(value, 2);
 	}
 
 	private static double distance(Point point, Point point2) {
