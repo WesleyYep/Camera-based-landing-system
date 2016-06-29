@@ -7,6 +7,7 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
 
 /**
  * Created by Wesley on 24/04/2016.
@@ -120,7 +121,7 @@ public class TestColourDetection {
 	        		double avX = totalX / 3;
 	        		double avY = totalY / 3;
 		  //      	System.out.println("AVERAGE: x: " + avX + " - y: " + avY);
-//	        		Imgproc.circle(imgOriginal, new Point(avX, avY), 2, new Scalar(0,255,0),5);
+	        		Imgproc.circle(imgOriginal, new Point(avX, avY), 2, new Scalar(0,255,0),5);
 	        		
                     int centreX = width/2;
                     int centreY = height/2;
@@ -195,6 +196,9 @@ public class TestColourDetection {
 //        	thresholdFrame.render(imgThresholded);//show the thresholded image
 //      //  	Core.add(imgOriginal,imgLines, imgOriginal);
 //        	imgFrame.render(imgOriginal); //show the original image
+	        VideoWriter writer = new VideoWriter("./out.avi", VideoWriter.fourcc('M', 'J', 'P', 'G'),
+	        		12, new Size(width,height), true);
+	        writer.write(imgOriginal);
 	    }
 	    return;
 	}
