@@ -175,12 +175,12 @@ public class TestMavlinkReader {
                     //System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
                     pitch = ((msg_ahrs2)msg).pitch;
                     yaw = ((msg_ahrs2)msg).yaw;
-                    roll = ((msg_ahrs2)msg).roll;
-                    System.out.println("pitch=" + pitch + " - roll="+roll + " - yaw=" +yaw);
+                    roll = -((msg_ahrs2)msg).roll;
+          //          System.out.println("pitch=" + pitch + " - roll="+roll + " - yaw=" +yaw);
                 } else if (msg != null && msg.messageType == msg_global_position_int.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
                     nb++;
                 	altitude = ((msg_global_position_int)msg).alt - initialAltitude;
-                	System.out.println("altitude=" + altitude);
+          //      	System.out.println("altitude=" + altitude);
                 }
             }
         } catch (IOException e) {

@@ -127,9 +127,9 @@ public class TestColourDetection {
                     int centreY = height/2;
                     double relativeY = avY - centreY;
                     double relativeX = avX - centreX;
-                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
-                    double aovHorizontal = Math.toRadians(54);
-                    double aovVertical = Math.toRadians(41);
+//                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
+                    double aovHorizontal = Math.toRadians(39);
+                    double aovVertical = Math.toRadians(22);
                     double pitch = TestMavlinkReader.pitch;// Math.toRadians(0);
                     double roll = TestMavlinkReader.roll;// Math.toRadians(0);
 //                    double actualX, actualY;
@@ -144,16 +144,18 @@ public class TestColourDetection {
                     double dist3 = distance(actualMarkers.get(1), actualMarkers.get(2));
                     double maxDistance = Math.max(Math.max(dist1,dist2), dist3);
 					double perceivedPixelLength = maxDistance;
-					double actualSizeMetres = 0.15;
-					double f = (110 * 1)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
+					double actualSizeMetres = 0.194;
+					double f = (125.8 * 1.00)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
 					double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
-                    System.out.println("Distance is: " + actualDistance);
-                    
-                    //now find altitude
-                    double betaX = Math.atan(Math.tan(aovHorizontal/2) * relativeX / (width/2));
-                    double betaY = Math.atan(Math.tan(aovVertical/2) * relativeY / (height/2));
+                    System.out.println("Distance is: Pixel: " + perceivedPixelLength + " Actual: " + actualDistance);
+
+                    //now find altitude - swap since camera is at 90 degrees to drone direction
+                    double betaY = Math.atan(Math.tan(aovHorizontal/2) * relativeX / (width/2));
+                    double betaX = Math.atan(Math.tan(aovVertical/2) * relativeY / (height/2));
                     double thetaX = roll + betaX;
+                    System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX);
                     double thetaY = pitch + betaY;
+                    System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY);
                     double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
 
                     //now find x and y offset
@@ -164,7 +166,7 @@ public class TestColourDetection {
 	        		try {
 						client.send("pos:" + xOffset + ":" + yOffset);
 						client.send("alt:" + altitude);
-						client.send("dist:"+ maxDistance);
+						client.send("dist:"+ actualDistance);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

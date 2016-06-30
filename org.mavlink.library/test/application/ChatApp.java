@@ -25,6 +25,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 public class ChatApp extends Application {
@@ -84,8 +85,11 @@ public class ChatApp extends Application {
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
         display = new Pane(landingPad, distanceText, altitudeText, positionText);
-        altitudeText.setTranslateY(15);
-        positionText.setTranslateY(30);
+        altitudeText.setTranslateY(20);
+        positionText.setTranslateY(40);
+        distanceText.setFont(new Font("Serif", 18));
+        altitudeText.setFont(new Font("Serif", 18));
+        positionText.setFont(new Font("Serif", 18));
         display.setPrefSize(384, 216);
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
@@ -129,14 +133,14 @@ public class ChatApp extends Application {
 				if (data.toString().startsWith("pos:")) {
 					//pos:x:y
 					String[] arr = data.toString().split(":");
-					double x = Double.parseDouble(arr[1]);
-					double y = Double.parseDouble(arr[2]);
-					landingPad.setRotate(Math.toDegrees(Math.atan2(y, x)));
-					positionText.setText("Relative Position: x=" + arr[1] + " y=" + arr[2]);
+					double x = Double.parseDouble(arr[1]) * -1; //they appear reversed
+					double y = Double.parseDouble(arr[2]) * -1;
+					landingPad.setRotate(Math.toDegrees(Math.atan2(-x, -y))); //swap due to camera orientation
+					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 				} else if (data.toString().startsWith("dist:")) {
-					distanceText.setText("Total Distance: " + data.toString().split(":")[1]);
+					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("alt:")) {
-					altitudeText.setText("Altitude: " + data.toString().split(":")[1]);
+					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				}
 			});
 		});
