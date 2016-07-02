@@ -128,8 +128,8 @@ public class TestColourDetection {
                     double relativeY = avY - centreY;
                     double relativeX = avX - centreX;
 //                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
-                    double aovHorizontal = Math.toRadians(39);
-                    double aovVertical = Math.toRadians(22);
+                    double aovHorizontal = Math.toRadians(39); //39
+                    double aovVertical = Math.toRadians(22);   //22
                     double pitch = TestMavlinkReader.pitch;// Math.toRadians(0);
                     double roll = TestMavlinkReader.roll;// Math.toRadians(0);
 //                    double actualX, actualY;
@@ -150,12 +150,12 @@ public class TestColourDetection {
                     System.out.println("Distance is: Pixel: " + perceivedPixelLength + " Actual: " + actualDistance);
 
                     //now find altitude - swap since camera is at 90 degrees to drone direction
-                    double betaY = Math.atan(Math.tan(aovHorizontal/2) * relativeX / (width/2));
-                    double betaX = Math.atan(Math.tan(aovVertical/2) * relativeY / (height/2));
+                    double betaY = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
+                    double betaX = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
                     double thetaX = roll + betaX;
-                    System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX);
+                    System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
                     double thetaY = pitch + betaY;
-                    System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY);
+                    System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
 
                     //now find x and y offset
