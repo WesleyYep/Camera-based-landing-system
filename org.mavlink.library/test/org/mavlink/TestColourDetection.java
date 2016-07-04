@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
@@ -198,9 +199,7 @@ public class TestColourDetection {
 //        	thresholdFrame.render(imgThresholded);//show the thresholded image
 //      //  	Core.add(imgOriginal,imgLines, imgOriginal);
 //        	imgFrame.render(imgOriginal); //show the original image
-	        VideoWriter writer = new VideoWriter("./out.avi", VideoWriter.fourcc('M', 'J', 'P', 'G'),
-	        		12, new Size(width,height), true);
-	        writer.write(imgOriginal);
+	        Imgcodecs.imwrite("./stream.jpg", imgOriginal);
 	    }
 	    return;
 	}

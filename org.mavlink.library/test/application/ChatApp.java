@@ -1,9 +1,18 @@
 package application;
 
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+import com.sun.jna.Native;
+import com.sun.jna.NativeLibrary;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
+import uk.co.caprica.vlcj.binding.LibVlc;
+import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
+import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -44,6 +53,7 @@ public class ChatApp extends Application {
 	private Label distanceText = new Label("Total distance: ");
 	private Label altitudeText = new Label("Altitude: ");
 	private Label positionText = new Label("Relative Position: ");
+	private final EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
 
 	private Parent createContent(){
 		messages.setPrefHeight(550);
@@ -65,7 +75,6 @@ public class ChatApp extends Application {
 
 		//Arm event
 		arm.setOnAction(event -> {
-
 			try{
 				connection.send("ARMMMMMMMMMM");
 			}catch (Exception e){
@@ -73,6 +82,7 @@ public class ChatApp extends Application {
 			}
 
 		});
+		
 		VBox root = new VBox(10, messages, input);
 		//root.getChildren().add(arm);
 		topMenu = new HBox();
@@ -118,6 +128,20 @@ public class ChatApp extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Base Station");
 		primaryStage.show();
+		
+		displayStreamFrame();
+	}
+
+
+	private void displayStreamFrame() {
+        JFrame frame = new JFrame("Video Stream");
+        frame.setContentPane(mediaPlayerComponent);
+        frame.setLocation(100, 100);
+        frame.setSize(500, 500);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+//        mediaPlayerComponent.getMediaPlayer().playMedia("test3.mp4");
+        mediaPlayerComponent.getMediaPlayer().playMedia("http://192.168.1.3:8080/?action=stream");
 	}
 
 
@@ -147,6 +171,8 @@ public class ChatApp extends Application {
 	}
 
 	public static void main(String[] args) {
+		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), "C:\\Program Files\\VideoLAN\\VLC");
+        Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
 		launch(args);
 	}
 
