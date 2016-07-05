@@ -25,9 +25,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="jssc-2.8.0.jar"/>
-	<classpathentry kind="lib" path="jna-3.5.2.jar"/>
-	<classpathentry kind="lib" path="vlcj-3.0.1.jar"/>
 	<classpathentry kind="src" path="resources"/>
-	<classpathentry kind="lib" path="C:/Users/Wesley/Downloads/opencv/build/java/opencv-310.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Wesley/Downloads/opencv/build/java/opencv-310.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Wesley/Downloads/opencv/build/x64/vc14/bin"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

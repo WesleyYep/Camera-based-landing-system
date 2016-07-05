@@ -45,6 +45,8 @@ public class TestColourDetection {
         Mat imgOriginal = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	 	Mat imgHSV = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
+        Mat hierarchy = new Mat();
+//        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
 	 
 	    while (true) {
 	        boolean bSuccess = cap.read(imgOriginal); // read a new frame from video
@@ -54,7 +56,7 @@ public class TestColourDetection {
 	        }
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 	      
-	        Core.inRange(imgHSV, new Scalar(0,140,140), new Scalar(10,255,255), imgThresholded);
+	        Core.inRange(imgHSV, new Scalar(0,140,100), new Scalar(10,255,255), imgThresholded);
 	        
 	        //morphological opening (removes small objects from the foreground)
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
@@ -64,9 +66,17 @@ public class TestColourDetection {
 	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
 	
+	        //send binary image here
+//	        imgThresholded.get(0, 0, data);
+//	        try {
+//				client.send(data);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+	        
 	        //see if we can find blobs based on contours
 	        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-	        Mat hierarchy = new Mat();
+	        
 	        Imgproc.findContours(imgThresholded, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);;
 //	        System.out.println("blob count: " + contours.size());
 	        if (contours.size() >= 3) {
@@ -199,7 +209,14 @@ public class TestColourDetection {
 //        	thresholdFrame.render(imgThresholded);//show the thresholded image
 //      //  	Core.add(imgOriginal,imgLines, imgOriginal);
 //        	imgFrame.render(imgOriginal); //show the original image
-	        Imgcodecs.imwrite("./stream.jpg", imgOriginal);
+	        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
+	        imgOriginal.get(0, 0, data);
+	        try {
+				client.send(data);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+	        
 	    }
 	    return;
 	}

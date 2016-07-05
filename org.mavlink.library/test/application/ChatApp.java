@@ -1,22 +1,23 @@
 package application;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import org.opencv.core.Core;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
-import uk.co.caprica.vlcj.binding.LibVlc;
-import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
-import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -24,6 +25,8 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
@@ -31,11 +34,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 
 public class ChatApp extends Application {
 
@@ -53,8 +53,15 @@ public class ChatApp extends Application {
 	private Label distanceText = new Label("Total distance: ");
 	private Label altitudeText = new Label("Altitude: ");
 	private Label positionText = new Label("Relative Position: ");
-	private final EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
-
+	private WritableImage image;
+	private ImageView imgView = new ImageView();
+	
+    static {
+        // Load the native OpenCV library
+        System.out.println(System.getProperty("java.library.path"));
+        System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+    }
+	
 	private Parent createContent(){
 		messages.setPrefHeight(550);
 		//Send event
@@ -82,8 +89,10 @@ public class ChatApp extends Application {
 			}
 
 		});
-		
-		VBox root = new VBox(10, messages, input);
+		image = new WritableImage(640, 480);
+		imgView.setImage(image);
+				
+		VBox root = new VBox(10, imgView, input);
 		//root.getChildren().add(arm);
 		topMenu = new HBox();
 		menuA.getItems().add(new MenuItem("first"));
@@ -123,27 +132,12 @@ public class ChatApp extends Application {
 		borderPane.setBottom(botMenu);
 		borderPane.setRight(display);
 		BorderPane.setMargin(display, new Insets(20,20,20,20));
-		Scene scene = new Scene(borderPane,904,400);
+		Scene scene = new Scene(borderPane,1100,600);
 		scene.getStylesheets().add(getClass().getResource("/application/Chat.css").toExternalForm());
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Base Station");
 		primaryStage.show();
-		
-		displayStreamFrame();
 	}
-
-
-	private void displayStreamFrame() {
-        JFrame frame = new JFrame("Video Stream");
-        frame.setContentPane(mediaPlayerComponent);
-        frame.setLocation(100, 100);
-        frame.setSize(500, 500);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-//        mediaPlayerComponent.getMediaPlayer().playMedia("test3.mp4");
-        mediaPlayerComponent.getMediaPlayer().playMedia("http://192.168.1.3:8080/?action=stream");
-	}
-
 
 	@Override
 	public void stop() throws Exception{
@@ -153,7 +147,7 @@ public class ChatApp extends Application {
 	private Server createServer(){
 		return new Server(55555, data ->{
 			Platform.runLater(() -> {
-				messages.appendText(data.toString() + "\n");
+//				messages.appendText(data.toString() + "\n");
 				if (data.toString().startsWith("pos:")) {
 					//pos:x:y
 					String[] arr = data.toString().split(":");
@@ -165,14 +159,34 @@ public class ChatApp extends Application {
 					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
+				} else if (data.toString().startsWith("[")) {
+					try {
+						ByteArrayInputStream bais = new ByteArrayInputStream(convertToBytes(data));
+						ObjectInputStream ois = new ObjectInputStream(bais);
+						Object obj = ois.readObject();
+						ois.close();
+						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+						byte[] b = ((byte[])obj);
+						System.arraycopy(b, 0, targetPixels, 0, b.length);
+						SwingFXUtils.toFXImage(bufferedImage, image);
+						imgView.setImage(image);
+					} catch (Exception e) { e.printStackTrace(); }
 				}
 			});
 		});
 	}
+	
+	private byte[] convertToBytes(Serializable data) throws IOException {
+		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				ObjectOutput out = new ObjectOutputStream(bos)) {
+			out.writeObject(data);
+			return bos.toByteArray();
+		}
+	}
+
 
 	public static void main(String[] args) {
-		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), "C:\\Program Files\\VideoLAN\\VLC");
-        Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
 		launch(args);
 	}
 
