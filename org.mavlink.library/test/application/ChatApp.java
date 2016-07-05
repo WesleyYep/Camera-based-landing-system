@@ -1,28 +1,17 @@
 package application;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 import org.mavlink.NetworkConnection;
 import org.mavlink.Server;
 import org.mavlink.StreamServer;
 import org.opencv.core.Core;
-
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -50,6 +39,8 @@ public class ChatApp extends Application {
 	private Button arm = new Button("Arm");
 	private MenuBar menuBar = new MenuBar();
 	private Menu menuA = new Menu("Menu");
+	private CheckBox streamToggle = new CheckBox("Stream");
+//	private CheckBox binaryToggle = new CheckBox("Binary");
 	private HBox topMenu;
 	private HBox botMenu;
 	private Pane display;
@@ -58,7 +49,6 @@ public class ChatApp extends Application {
 	private Label distanceText = new Label("Total distance: ");
 	private Label altitudeText = new Label("Altitude: ");
 	private Label positionText = new Label("Relative Position: ");
-//	private WritableImage image;
 	private ImageView imgView = new ImageView();
 	
     static {
@@ -92,10 +82,23 @@ public class ChatApp extends Application {
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
 			}
-
 		});
-//		image = new WritableImage(640, 480);
-//		imgView.setImage(image);
+		
+		streamToggle.setOnAction(event -> {
+			try{
+				connection.send("stream:" + streamToggle.isSelected());
+				if (!streamToggle.isSelected()) {
+					imgView.setImage(new WritableImage(640,480));
+				}
+			}catch (Exception e){
+				messages.appendText("Failed to send\n");
+			}
+		});
+		
+		imgView.setImage(new WritableImage(640, 480));
+		imgView.setFitWidth(640);
+		imgView.setFitHeight(480);
+		imgView.setStyle("-fx-background-color: BLACK");
 				
 		VBox root = new VBox(10, imgView, input);
 		//root.getChildren().add(arm);
@@ -103,7 +106,7 @@ public class ChatApp extends Application {
 		menuA.getItems().add(new MenuItem("first"));
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
-		botMenu = new HBox(5,btn,arm);
+		botMenu = new HBox(5,btn,arm,streamToggle);
 		
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
@@ -182,27 +185,18 @@ public class ChatApp extends Application {
 				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("[")) {
-					try {
-						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
-						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-						System.arraycopy(data, 0, targetPixels, 0, 640*480*3);
-						WritableImage image = new WritableImage(640,480);
-						SwingFXUtils.toFXImage(bufferedImage, image);
-						imgView.setImage(image);
-					} catch (Exception e) { e.printStackTrace(); }
+//					try {
+//						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+//						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+//						System.arraycopy(data, 0, targetPixels, 0, 640*480*3);
+//						WritableImage image = new WritableImage(640,480);
+//						SwingFXUtils.toFXImage(bufferedImage, image);
+//						imgView.setImage(image);
+//					} catch (Exception e) { e.printStackTrace(); }
 				}
 			});
 		});
 	}
-	
-	private byte[] convertToBytes(Serializable data) throws IOException {
-		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				ObjectOutput out = new ObjectOutputStream(bos)) {
-			out.writeObject(data);
-			return bos.toByteArray();
-		}
-	}
-
 
 	public static void main(String[] args) {
 		launch(args);

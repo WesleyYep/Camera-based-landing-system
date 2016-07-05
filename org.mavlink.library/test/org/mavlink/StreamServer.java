@@ -49,13 +49,15 @@ public class StreamServer extends NetworkConnection {
 			while (true) {
 				if (connThread.socket != null) {
 					in = new DataInputStream(connThread.socket.getInputStream());
-					byte[] buf = new byte[640*480*3];
-					in.readFully(buf, 0, 640*480*3);
+					int numBytes = 640*480*3;
+					int type = BufferedImage.TYPE_3BYTE_BGR;
+					byte[] buf = new byte[numBytes];
+					in.readFully(buf, 0, numBytes);
 					
 					try {
-						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+						BufferedImage bufferedImage = new BufferedImage(640, 480, type);
 						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-						System.arraycopy(buf, 0, targetPixels, 0, 640*480*3);
+						System.arraycopy(buf, 0, targetPixels, 0, numBytes);
 						WritableImage image = new WritableImage(640,480);
 						SwingFXUtils.toFXImage(bufferedImage, image);
 						ca.setStreamImage(image);

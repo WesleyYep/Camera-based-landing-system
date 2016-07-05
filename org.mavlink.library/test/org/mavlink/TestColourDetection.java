@@ -21,9 +21,15 @@ public class TestColourDetection {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     }
     
+    private static boolean isStreaming = false;
+//    private static boolean isBinary = false;
+    
     public static void start() {
 		Client client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());
+			if (data.toString().startsWith("stream")) {
+				isStreaming = data.toString().split(":")[1].equals("true");
+			}
 		});
 		Client streamClient = new Client("169.254.110.196", 55556, null);
 		try {
@@ -69,12 +75,15 @@ public class TestColourDetection {
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
 	
 	        //send binary image here
-//	        imgThresholded.get(0, 0, data);
-//	        try {
-//				client.send(data);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
+//	        if (isStreaming && isBinary) {
+//		        byte[] data = new byte[(int) (width * height * imgThresholded.channels())];
+//		        imgThresholded.get(0, 0, data);
+//		        try {
+//		        	streamClient.sendBytes(data);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//	        }
 	        
 	        //see if we can find blobs based on contours
 	        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
@@ -185,40 +194,16 @@ public class TestColourDetection {
 					}
 	        	}
 	        }
-	        
-//	        //Calculate the moments of the thresholded image
-//	        Moments oMoments = Imgproc.moments(imgThresholded);
-//	
-//	        double dM01 = oMoments.m01;
-//	        double dM10 = oMoments.m10;
-//	        double dArea = oMoments.m00;
-//	
-//	        // if the area <= 10000, I consider that the there are no object in the image and it's because of the noise, the area is not zero 
-//	        if (dArea > 10000) {
-//	        	//calculate the position of the ball
-//	        	int posX = (int) (dM10 / dArea);
-//	        	int posY = (int) (dM01 / dArea);       
-//	        	System.out.println("OVERALL: x: " + posX + " - y: " + posY);
-//		        
-//	        	if (iLastX >= 0 && iLastY >= 0 && posX >= 0 && posY >= 0) {
-//	        		//Draw a red line from the previous point to the current point
-////	        		Imgproc.line(imgLines, new Point(posX, posY), new Point(iLastX, iLastY), new Scalar(0,0,255), 2);
-//	        	}
-//	
-//	        	iLastX = posX;
-//	        	iLastY = posY;
-//	        }
-//        	thresholdFrame.render(imgThresholded);//show the thresholded image
-//      //  	Core.add(imgOriginal,imgLines, imgOriginal);
-//        	imgFrame.render(imgOriginal); //show the original image
-	        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
-	        imgOriginal.get(0, 0, data);
-	        try {
-	        	streamClient.sendBytes(data);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-	        
+
+	        if (isStreaming) {
+		        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
+		        imgOriginal.get(0, 0, data);
+		        try {
+		        	streamClient.sendBytes(data);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+	        }
 	    }
 	    return;
 	}
