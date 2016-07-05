@@ -40,4 +40,9 @@ public class Server extends NetworkConnection {
 	protected int getPort(){
 		return port;
 	}
+	
+	@Override
+	protected boolean isStreamingServer() {
+		return false;
+	}
 }

@@ -25,8 +25,10 @@ public class TestColourDetection {
 		Client client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());
 		});
+		Client streamClient = new Client("169.254.110.196", 55556, null);
 		try {
 			client.startConnection();
+			streamClient.startConnection();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -212,7 +214,7 @@ public class TestColourDetection {
 	        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
 	        imgOriginal.get(0, 0, data);
 	        try {
-				client.send(data);
+	        	streamClient.sendBytes(data);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

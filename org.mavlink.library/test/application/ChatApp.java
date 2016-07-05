@@ -9,6 +9,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import org.mavlink.NetworkConnection;
+import org.mavlink.Server;
+import org.mavlink.StreamServer;
 import org.opencv.core.Core;
 
 import javafx.application.Application;
@@ -25,6 +29,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Background;
@@ -53,7 +58,7 @@ public class ChatApp extends Application {
 	private Label distanceText = new Label("Total distance: ");
 	private Label altitudeText = new Label("Altitude: ");
 	private Label positionText = new Label("Relative Position: ");
-	private WritableImage image;
+//	private WritableImage image;
 	private ImageView imgView = new ImageView();
 	
     static {
@@ -89,8 +94,8 @@ public class ChatApp extends Application {
 			}
 
 		});
-		image = new WritableImage(640, 480);
-		imgView.setImage(image);
+//		image = new WritableImage(640, 480);
+//		imgView.setImage(image);
 				
 		VBox root = new VBox(10, imgView, input);
 		//root.getChildren().add(arm);
@@ -145,9 +150,26 @@ public class ChatApp extends Application {
 	}
 
 	private Server createServer(){
+		//create stream server
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				StreamServer streamServer = new StreamServer(55556, ChatApp.this);
+				try {
+					streamServer.startConnection();
+					streamServer.receiveBytes();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		t.start();
+		
+		//create message server
 		return new Server(55555, data ->{
 			Platform.runLater(() -> {
 //				messages.appendText(data.toString() + "\n");
+				System.out.println(data.toString());
 				if (data.toString().startsWith("pos:")) {
 					//pos:x:y
 					String[] arr = data.toString().split(":");
@@ -161,14 +183,10 @@ public class ChatApp extends Application {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("[")) {
 					try {
-						ByteArrayInputStream bais = new ByteArrayInputStream(convertToBytes(data));
-						ObjectInputStream ois = new ObjectInputStream(bais);
-						Object obj = ois.readObject();
-						ois.close();
 						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
 						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-						byte[] b = ((byte[])obj);
-						System.arraycopy(b, 0, targetPixels, 0, b.length);
+						System.arraycopy(data, 0, targetPixels, 0, 640*480*3);
+						WritableImage image = new WritableImage(640,480);
 						SwingFXUtils.toFXImage(bufferedImage, image);
 						imgView.setImage(image);
 					} catch (Exception e) { e.printStackTrace(); }
@@ -188,6 +206,11 @@ public class ChatApp extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+	}
+
+
+	public void setStreamImage(Image i) {
+		imgView.setImage(i);
 	}
 
 }
