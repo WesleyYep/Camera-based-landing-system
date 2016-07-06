@@ -1,5 +1,6 @@
 package application;
 
+import org.controlsfx.control.RangeSlider;
 import org.mavlink.NetworkConnection;
 import org.mavlink.Server;
 import org.mavlink.StreamServer;
@@ -50,6 +51,9 @@ public class ChatApp extends Application {
 	private Label altitudeText = new Label("Altitude: ");
 	private Label positionText = new Label("Relative Position: ");
 	private ImageView imgView = new ImageView();
+	private RangeSlider hSlider = new RangeSlider(0,180, 0, 10);
+	private RangeSlider sSlider = new RangeSlider(0,255,140,255);
+	private RangeSlider vSlider = new RangeSlider(0,255,100,255);
 	
     static {
         // Load the native OpenCV library
@@ -95,6 +99,23 @@ public class ChatApp extends Application {
 			}
 		});
 		
+		hSlider.setOnMouseReleased(event -> {sliderChanged("h");});
+		sSlider.setOnMouseReleased(event -> {sliderChanged("s");});
+		vSlider.setOnMouseReleased(event -> {sliderChanged("v");});
+		sSlider.setLowValue(140);
+		hSlider.setPrefWidth(250);
+		hSlider.setShowTickLabels(true);
+		hSlider.setShowTickMarks(true);
+		sSlider.setPrefWidth(250);
+		sSlider.setShowTickLabels(true);
+		sSlider.setShowTickMarks(true);		
+		vSlider.setPrefWidth(250);
+		vSlider.setShowTickLabels(true);
+		vSlider.setShowTickMarks(true);
+		Label hLabel = new Label("H");
+		Label sLabel = new Label("S");
+		Label vLabel = new Label("V");		
+		
 		imgView.setImage(new WritableImage(640, 480));
 		imgView.setFitWidth(640);
 		imgView.setFitHeight(480);
@@ -106,7 +127,7 @@ public class ChatApp extends Application {
 		menuA.getItems().add(new MenuItem("first"));
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
-		botMenu = new HBox(5,btn,arm,streamToggle);
+		botMenu = new HBox(5,btn,arm,streamToggle, hLabel, hSlider, sLabel, sSlider, vLabel, vSlider);
 		
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
@@ -124,7 +145,17 @@ public class ChatApp extends Application {
 	}
 
 
-	@Override
+	private void sliderChanged(String type) {
+		try{
+			if (type.equals("h") || type.equals("all")) { connection.send("slider:h:" + hSlider.getLowValue() + ":" + hSlider.getHighValue());}
+			if (type.equals("s") || type.equals("all")) { connection.send("slider:s:" + sSlider.getLowValue() + ":" + sSlider.getHighValue());}
+			if (type.equals("v") || type.equals("all")) { connection.send("slider:v:" + vSlider.getLowValue() + ":" + vSlider.getHighValue());}
+		}catch (Exception e){
+			messages.appendText("Failed to send\n");
+		}
+	}
+	
+@Override
 	public void init() throws Exception{
 		connection.startConnection();
 	}
@@ -173,7 +204,9 @@ public class ChatApp extends Application {
 			Platform.runLater(() -> {
 //				messages.appendText(data.toString() + "\n");
 				System.out.println(data.toString());
-				if (data.toString().startsWith("pos:")) {
+				if (data.toString().startsWith("start")) {
+					sliderChanged("all");
+				} else if (data.toString().startsWith("pos:")) {
 					//pos:x:y
 					String[] arr = data.toString().split(":");
 					double x = Double.parseDouble(arr[1]) * -1; //they appear reversed

@@ -25,6 +25,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="jssc-2.8.0.jar"/>
+	<classpathentry kind="lib" path="controlsfx-8.40.11.jar"/>
 	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="lib" path="C:/Users/Wesley/Downloads/opencv/build/java/opencv-310.jar">
 		<attributes>

@@ -23,12 +23,25 @@ public class TestColourDetection {
     
     private static boolean isStreaming = false;
 //    private static boolean isBinary = false;
+    private static double hMin, hMax, sMin, sMax, vMin, vMax;
     
     public static void start() {
 		Client client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());
-			if (data.toString().startsWith("stream")) {
-				isStreaming = data.toString().split(":")[1].equals("true");
+			String[] arr = data.toString().split(":");
+			if (data.toString().startsWith("stream:")) {
+				isStreaming = arr[1].equals("true");
+			} else if (data.toString().startsWith("slider:")) {
+				if (arr[1].equals("h")) {
+					hMin = Double.parseDouble(arr[2]);
+					hMax = Double.parseDouble(arr[3]);
+				} else if (arr[1].equals("s")) {
+					sMin = Double.parseDouble(arr[2]);
+					sMax = Double.parseDouble(arr[3]);
+				} else if (arr[1].equals("v")) {
+					vMin = Double.parseDouble(arr[2]);
+					vMax = Double.parseDouble(arr[3]);
+				}
 			}
 		});
 		Client streamClient = new Client("169.254.110.196", 55556, null);
@@ -54,8 +67,13 @@ public class TestColourDetection {
 	 	Mat imgHSV = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat hierarchy = new Mat();
-//        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
-	 
+
+        try {
+			client.send("start");
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+        
 	    while (true) {
 	        boolean bSuccess = cap.read(imgOriginal); // read a new frame from video
 	        if (!bSuccess) {//if not success, break loop
@@ -64,7 +82,8 @@ public class TestColourDetection {
 	        }
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 	      
-	        Core.inRange(imgHSV, new Scalar(0,140,100), new Scalar(10,255,255), imgThresholded);
+//	        Core.inRange(imgHSV, new Scalar(0,140,100), new Scalar(10,255,255), imgThresholded);
+	        Core.inRange(imgHSV, new Scalar(hMin,sMin,vMin), new Scalar(hMax,sMax,vMax), imgThresholded);
 	        
 	        //morphological opening (removes small objects from the foreground)
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
