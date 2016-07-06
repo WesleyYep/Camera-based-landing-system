@@ -20,6 +20,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -145,6 +146,11 @@ public class ChatApp extends Application {
 				messages.appendText("Failed to send\n");
 			}
 		});
+		
+		ToggleGroup group = new ToggleGroup();
+		stabilizeModeButton.setToggleGroup(group);
+		loiterModeButton.setToggleGroup(group);
+		landModeButton.setToggleGroup(group);
 		
 		hSlider.setOnMouseReleased(event -> {sliderChanged("h");});
 		sSlider.setOnMouseReleased(event -> {sliderChanged("s");});
