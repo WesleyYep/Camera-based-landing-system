@@ -17,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -37,7 +38,6 @@ public class ChatApp extends Application {
 	private TextArea messages = new TextArea();
 	private TextField input = new TextField();
 	private Button btn = new Button("Send");
-	private Button arm = new Button("Arm");
 	private MenuBar menuBar = new MenuBar();
 	private Menu menuA = new Menu("Menu");
 	private CheckBox streamToggle = new CheckBox("Stream");
@@ -54,6 +54,10 @@ public class ChatApp extends Application {
 	private RangeSlider hSlider = new RangeSlider(0,180, 0, 10);
 	private RangeSlider sSlider = new RangeSlider(0,255,140,255);
 	private RangeSlider vSlider = new RangeSlider(0,255,100,255);
+	private CheckBox armCheckBox = new CheckBox("Arm");
+	private RadioButton stabilizeModeButton = new RadioButton("Stabilize");
+	private RadioButton loiterModeButton = new RadioButton("Loiter");
+	private RadioButton landModeButton = new RadioButton("Land");
 	
     static {
         // Load the native OpenCV library
@@ -79,10 +83,53 @@ public class ChatApp extends Application {
 			}
 		});
 
-		//Arm event
-		arm.setOnAction(event -> {
+		//ARM/DISARM event
+		armCheckBox.setOnAction(event -> {
+			try {
+				if(armCheckBox.isSelected() == true){
+					System.out.println("ARMED");
+					connection.send("ARMMED");
+				} else{
+					System.out.println("DISARMED");
+					//cbox.setSelected(true);
+					connection.send("DISARMED");
+				}
+			} catch (Exception e) {
+				messages.appendText("Failed to send\n");
+			}
+		});
+				
+		//Changing mode
+		stabilizeModeButton.setOnAction(event -> {
 			try{
-				connection.send("ARMMMMMMMMMM");
+				if(stabilizeModeButton.isSelected() == true){
+					System.out.println("STABILIZE");
+					connection.send("mode:stabilize");
+				} 				
+			}catch (Exception e){
+				messages.appendText("Failed to send\n");
+			}
+
+		});
+		
+		loiterModeButton.setOnAction(event -> {
+			try{
+				if(loiterModeButton.isSelected() == true){
+					System.out.println("LOITER");
+					connection.send("mode:loiter");
+				}
+			}catch (Exception e){
+				messages.appendText("Failed to send\n");
+			}
+
+		});
+		
+		landModeButton.setOnAction(event -> {
+			try{
+				if(landModeButton.isSelected() == true){
+					System.out.println("LAND");
+					connection.send("mode:land");
+				}
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
 			}
@@ -112,9 +159,8 @@ public class ChatApp extends Application {
 		vSlider.setPrefWidth(250);
 		vSlider.setShowTickLabels(true);
 		vSlider.setShowTickMarks(true);
-		Label hLabel = new Label("H");
-		Label sLabel = new Label("S");
-		Label vLabel = new Label("V");		
+		VBox sliderBox = new VBox(new Label("H"), hSlider, new Label("S"),  sSlider, new Label("V"), vSlider);
+		sliderBox.setTranslateY(300);
 		
 		imgView.setImage(new WritableImage(640, 480));
 		imgView.setFitWidth(640);
@@ -127,12 +173,12 @@ public class ChatApp extends Application {
 		menuA.getItems().add(new MenuItem("first"));
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
-		botMenu = new HBox(5,btn,arm,streamToggle, hLabel, hSlider, sLabel, sSlider, vLabel, vSlider);
+		botMenu = new HBox(5,btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton);
 		
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
-        display = new Pane(landingPad, distanceText, altitudeText, positionText);
+        display = new Pane(landingPad, /*distanceText,*/ altitudeText, positionText, sliderBox);
         altitudeText.setTranslateY(20);
         positionText.setTranslateY(40);
         distanceText.setFont(new Font("Serif", 18));
@@ -214,19 +260,10 @@ public class ChatApp extends Application {
 					landingPad.setRotate(Math.toDegrees(Math.atan2(-x, -y))); //swap due to camera orientation
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 				} else if (data.toString().startsWith("dist:")) {
-					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
-				} else if (data.toString().startsWith("alt:")) {
+//					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
+//				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
-				} else if (data.toString().startsWith("[")) {
-//					try {
-//						BufferedImage bufferedImage = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
-//						final byte[] targetPixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-//						System.arraycopy(data, 0, targetPixels, 0, 640*480*3);
-//						WritableImage image = new WritableImage(640,480);
-//						SwingFXUtils.toFXImage(bufferedImage, image);
-//						imgView.setImage(image);
-//					} catch (Exception e) { e.printStackTrace(); }
-				}
+				} 
 			});
 		});
 	}
