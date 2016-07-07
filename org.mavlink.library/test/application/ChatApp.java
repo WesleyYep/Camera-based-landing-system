@@ -267,7 +267,7 @@ public class ChatApp extends Application {
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 				} else if (data.toString().startsWith("dist:")) {
 //					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
-//				} else if (data.toString().startsWith("alt:")) {
+				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				} 
 			});

@@ -197,8 +197,9 @@ public class TestColourDetection {
                     System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
                     double thetaY = pitch + betaY;
                     System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
-                    double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
-
+                    //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
+                    double altitude = 0.098 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
+                    
                     //now find x and y offset
                     double xOffset = altitude * Math.tan(thetaX);
                     double yOffset = altitude * Math.tan(thetaY);
