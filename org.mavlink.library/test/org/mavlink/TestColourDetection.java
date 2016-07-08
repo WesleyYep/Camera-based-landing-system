@@ -1,8 +1,15 @@
 package org.mavlink;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.TreeMap;
+
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -149,6 +156,24 @@ public class TestColourDetection {
 	        		if (difference < min) {
 	        			firstMarker = actualMarkers.size() - 1;
 	        			min = difference;
+	        		}
+	        	}
+	        	System.out.println("num: " + actualMarkers.size());
+	        	if (actualMarkers.size() > 3) {
+	        		TreeMap<Double, Point> distances = new TreeMap<Double, Point>();
+	        		for (int i = 0; i < actualMarkers.size(); i++) {
+	        			double distance = 0;
+	        			for (int j = 0; j < actualMarkers.size(); j++) {
+	        				if (i != j) {
+	        					distance += distance(actualMarkers.get(i), actualMarkers.get(j));
+	        				}
+	        			}
+	        			distances.put(distance, actualMarkers.get(i));
+	        		}
+	        		int count = 0;
+	        		while (actualMarkers.size() > 3 && count < 10){
+	        			actualMarkers.remove(distances.lastEntry().getValue());
+	        			count++;
 	        		}
 	        	}
 	        	if (actualMarkers.size() == 3) {
