@@ -60,6 +60,7 @@ public class ChatApp extends Application {
 	private RadioButton loiterModeButton = new RadioButton("Loiter");
 	private RadioButton landModeButton = new RadioButton("Land");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
+	private Label landLabel = new Label("Landing pad not flat");
 	
     static {
         // Load the native OpenCV library
@@ -167,6 +168,7 @@ public class ChatApp extends Application {
 		vSlider.setShowTickMarks(true);
 		VBox sliderBox = new VBox(new Label("H"), hSlider, new Label("S"),  sSlider, new Label("V"), vSlider, modeLabel);
 		sliderBox.setTranslateY(300);
+		landLabel.setTranslateY(250);
 		
 		imgView.setImage(new WritableImage(640, 480));
 		imgView.setFitWidth(640);
@@ -184,12 +186,13 @@ public class ChatApp extends Application {
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
 		landingPad.setFill(Color.RED);
-        display = new Pane(landingPad, /*distanceText,*/ altitudeText, positionText, sliderBox);
+        display = new Pane(landingPad, /*distanceText,*/ altitudeText, positionText, landLabel, sliderBox);
         altitudeText.setTranslateY(20);
         positionText.setTranslateY(40);
         distanceText.setFont(new Font("Serif", 18));
         altitudeText.setFont(new Font("Serif", 18));
         positionText.setFont(new Font("Serif", 18));
+        landLabel.setFont(new Font("Serif", 18));
         display.setPrefSize(384, 216);
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));

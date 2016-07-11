@@ -1,21 +1,13 @@
 package org.mavlink;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.TreeMap;
-
 import org.opencv.core.*;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.VideoWriter;
 
 /**
  * Created by Wesley on 24/04/2016.
@@ -31,6 +23,7 @@ public class TestColourDetection {
     public static boolean isStreaming = false;
 //    private static boolean isBinary = false;
     public static double hMin, hMax, sMin, sMax, vMin, vMax;
+    private static boolean isLandingPadFlat = false;
     
     public static void start() {
 //		Client client = new Client("169.254.110.196", 55555, data ->{
@@ -231,7 +224,22 @@ public class TestColourDetection {
                     	angle = angleBetween(actualMarkers.get(0), actualMarkers.get(1), actualMarkers.get(2));                    	
                     	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
                     }
-                    System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+         //           System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+                    try {
+	                    if (isLandingPadFlat) {
+	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || ratio > 1.1 || ratio < 0.9) {
+	                    		client.send("flat:false");
+	                    		isLandingPadFlat = false;
+	                    	}
+	                    } else {
+	                    	if (Math.abs(Math.abs(angle)%180-90) <= 5 && ratio < 1.1 && ratio > 0.9) {
+	                    		client.send("flat:true");
+	                    		isLandingPadFlat = true;
+	                    	}
+	                    }
+                    } catch (Exception e) {
+                    	e.printStackTrace();
+                    }
                     
                     //now find altitude - swap since camera is at 90 degrees to drone direction
                     double betaY = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
