@@ -53,12 +53,13 @@ public class ChatApp extends Application {
 	private Label positionText = new Label("Relative Position: ");
 	private ImageView imgView = new ImageView();
 	private RangeSlider hSlider = new RangeSlider(0,180, 0, 10);
-	private RangeSlider sSlider = new RangeSlider(0,255,140,255);
+	private RangeSlider sSlider = new RangeSlider(0,255,100,255);
 	private RangeSlider vSlider = new RangeSlider(0,255,100,255);
 	private CheckBox armCheckBox = new CheckBox("Arm");
 	private RadioButton stabilizeModeButton = new RadioButton("Stabilize");
 	private RadioButton loiterModeButton = new RadioButton("Loiter");
 	private RadioButton landModeButton = new RadioButton("Land");
+	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	
     static {
         // Load the native OpenCV library
@@ -71,8 +72,8 @@ public class ChatApp extends Application {
 		//Send event
 		btn.setOnAction(event -> {
 			if(!input.getText().isEmpty()){
-				String message = "BaseStation: " ;
-				message += input.getText();
+//				String message = "BaseStation: " ;
+				String message = input.getText();
 				input.clear();
 
 				messages.appendText(message + "\n");
@@ -89,11 +90,11 @@ public class ChatApp extends Application {
 			try {
 				if(armCheckBox.isSelected() == true){
 					System.out.println("ARMED");
-					connection.send("ARMMED");
+					connection.send("arm:true");
 				} else{
 					System.out.println("DISARMED");
 					//cbox.setSelected(true);
-					connection.send("DISARMED");
+					connection.send("arm:false");
 				}
 			} catch (Exception e) {
 				messages.appendText("Failed to send\n");
@@ -105,7 +106,7 @@ public class ChatApp extends Application {
 			try{
 				if(stabilizeModeButton.isSelected() == true){
 					System.out.println("STABILIZE");
-					connection.send("mode:stabilize");
+					connection.send("mode:stabilize:"+armCheckBox.isSelected());
 				} 				
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
@@ -117,7 +118,7 @@ public class ChatApp extends Application {
 			try{
 				if(loiterModeButton.isSelected() == true){
 					System.out.println("LOITER");
-					connection.send("mode:loiter");
+					connection.send("mode:loiter:"+armCheckBox.isSelected());
 				}
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
@@ -129,7 +130,7 @@ public class ChatApp extends Application {
 			try{
 				if(landModeButton.isSelected() == true){
 					System.out.println("LAND");
-					connection.send("mode:land");
+					connection.send("mode:land:"+armCheckBox.isSelected());
 				}
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
@@ -155,7 +156,6 @@ public class ChatApp extends Application {
 		hSlider.setOnMouseReleased(event -> {sliderChanged("h");});
 		sSlider.setOnMouseReleased(event -> {sliderChanged("s");});
 		vSlider.setOnMouseReleased(event -> {sliderChanged("v");});
-		sSlider.setLowValue(140);
 		hSlider.setPrefWidth(250);
 		hSlider.setShowTickLabels(true);
 		hSlider.setShowTickMarks(true);
@@ -165,7 +165,7 @@ public class ChatApp extends Application {
 		vSlider.setPrefWidth(250);
 		vSlider.setShowTickLabels(true);
 		vSlider.setShowTickMarks(true);
-		VBox sliderBox = new VBox(new Label("H"), hSlider, new Label("S"),  sSlider, new Label("V"), vSlider);
+		VBox sliderBox = new VBox(new Label("H"), hSlider, new Label("S"),  sSlider, new Label("V"), vSlider, modeLabel);
 		sliderBox.setTranslateY(300);
 		
 		imgView.setImage(new WritableImage(640, 480));
@@ -254,13 +254,12 @@ public class ChatApp extends Application {
 		//create message server
 		return new Server(55555, data ->{
 			Platform.runLater(() -> {
-//				messages.appendText(data.toString() + "\n");
-				System.out.println(data.toString());
+//				System.out.println(data.toString());
+				String[] arr = data.toString().split(":");
 				if (data.toString().startsWith("start")) {
 					sliderChanged("all");
 				} else if (data.toString().startsWith("pos:")) {
 					//pos:x:y
-					String[] arr = data.toString().split(":");
 					double x = Double.parseDouble(arr[1]) * -1; //they appear reversed
 					double y = Double.parseDouble(arr[2]) * -1;
 					landingPad.setRotate(Math.toDegrees(Math.atan2(-x, -y))); //swap due to camera orientation
@@ -269,7 +268,9 @@ public class ChatApp extends Application {
 //					distanceText.setText(String.format("Total Distance: %.2f", Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
-				} 
+				} else if (data.toString().startsWith("mode:")) {
+					modeLabel.setText("Mode: " + arr[1] + " , Custom Mode: " + arr[2]);
+				}
 			});
 		});
 	}

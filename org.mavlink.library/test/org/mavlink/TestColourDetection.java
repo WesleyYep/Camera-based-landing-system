@@ -27,30 +27,30 @@ public class TestColourDetection {
         System.out.println(System.getProperty("java.library.path"));
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     }
-    
-    private static boolean isStreaming = false;
+    public static Client client;
+    public static boolean isStreaming = false;
 //    private static boolean isBinary = false;
-    private static double hMin, hMax, sMin, sMax, vMin, vMax;
+    public static double hMin, hMax, sMin, sMax, vMin, vMax;
     
     public static void start() {
-		Client client = new Client("169.254.110.196", 55555, data ->{
-			System.out.println(data.toString());
-			String[] arr = data.toString().split(":");
-			if (data.toString().startsWith("stream:")) {
-				isStreaming = arr[1].equals("true");
-			} else if (data.toString().startsWith("slider:")) {
-				if (arr[1].equals("h")) {
-					hMin = Double.parseDouble(arr[2]);
-					hMax = Double.parseDouble(arr[3]);
-				} else if (arr[1].equals("s")) {
-					sMin = Double.parseDouble(arr[2]);
-					sMax = Double.parseDouble(arr[3]);
-				} else if (arr[1].equals("v")) {
-					vMin = Double.parseDouble(arr[2]);
-					vMax = Double.parseDouble(arr[3]);
-				}
-			}
-		});
+//		Client client = new Client("169.254.110.196", 55555, data ->{
+//			System.out.println(data.toString());
+//			String[] arr = data.toString().split(":");
+//			if (data.toString().startsWith("stream:")) {
+//				isStreaming = arr[1].equals("true");
+//			} else if (data.toString().startsWith("slider:")) {
+//				if (arr[1].equals("h")) {
+//					hMin = Double.parseDouble(arr[2]);
+//					hMax = Double.parseDouble(arr[3]);
+//				} else if (arr[1].equals("s")) {
+//					sMin = Double.parseDouble(arr[2]);
+//					sMax = Double.parseDouble(arr[3]);
+//				} else if (arr[1].equals("v")) {
+//					vMin = Double.parseDouble(arr[2]);
+//					vMax = Double.parseDouble(arr[3]);
+//				}
+//			}
+//		});
 		Client streamClient = new Client("169.254.110.196", 55556, null);
 		try {
 			client.startConnection();
@@ -73,6 +73,7 @@ public class TestColourDetection {
         Mat imgOriginal = new Mat( imgTmp.size(), CvType.CV_8UC3 );
 	 	Mat imgHSV = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
+        Mat upperRedThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat hierarchy = new Mat();
 
         try {
@@ -80,7 +81,7 @@ public class TestColourDetection {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-        
+        System.out.println("Started!");
 	    while (true) {
 	        boolean bSuccess = cap.read(imgOriginal); // read a new frame from video
 	        if (!bSuccess) {//if not success, break loop
@@ -89,8 +90,11 @@ public class TestColourDetection {
 	        }
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 	      
-//	        Core.inRange(imgHSV, new Scalar(0,140,100), new Scalar(10,255,255), imgThresholded);
 	        Core.inRange(imgHSV, new Scalar(hMin,sMin,vMin), new Scalar(hMax,sMax,vMax), imgThresholded);
+	        
+	        //detect second red
+	        Core.inRange(imgHSV, new Scalar(160,sMin,vMin), new Scalar(180,sMax,vMax), upperRedThresholded);
+	        Core.add(imgThresholded, upperRedThresholded, imgThresholded);
 	        
 	        //morphological opening (removes small objects from the foreground)
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
@@ -158,7 +162,7 @@ public class TestColourDetection {
 	        			min = difference;
 	        		}
 	        	}
-	        	System.out.println("num: " + actualMarkers.size());
+	 //       	System.out.println("num: " + actualMarkers.size());
 	        	if (actualMarkers.size() > 3) {
 	        		TreeMap<Double, Point> distances = new TreeMap<Double, Point>();
 	        		for (int i = 0; i < actualMarkers.size(); i++) {
@@ -210,20 +214,35 @@ public class TestColourDetection {
                     double dist3 = distance(actualMarkers.get(1), actualMarkers.get(2));
                     double maxDistance = Math.max(Math.max(dist1,dist2), dist3);
 					double perceivedPixelLength = maxDistance;
-					double actualSizeMetres = 0.194;
-					double f = (125.8 * 1.00)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
-					double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
-                    System.out.println("Distance is: Pixel: " + perceivedPixelLength + " Actual: " + actualDistance);
-
+			//		double actualSizeMetres = 0.194;
+			//		double f = (125.8 * 1.00)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
+			//		double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
+            //        System.out.println("Distance is: Pixel: " + perceivedPixelLength + " Actual: " + actualDistance);
+                    double angle = -1;
+                    double ratio = -1;
+                    //now find angle
+                    if (dist1 == maxDistance) { //marker 2 is centre
+                    	angle = angleBetween(actualMarkers.get(2), actualMarkers.get(0), actualMarkers.get(1));
+                    	ratio = dist2 > dist3 ? dist2/dist3 : dist3/dist2;
+                    } else if (dist2 == maxDistance) { //marker 1 is centre
+                    	angle = angleBetween(actualMarkers.get(1), actualMarkers.get(0), actualMarkers.get(2));
+                    	ratio = dist1 > dist3 ? dist1/dist3 : dist3/dist1;
+                    }else if (dist3 == maxDistance) { //marker 0 is centre
+                    	angle = angleBetween(actualMarkers.get(0), actualMarkers.get(1), actualMarkers.get(2));                    	
+                    	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
+                    }
+                    System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+                    
                     //now find altitude - swap since camera is at 90 degrees to drone direction
                     double betaY = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
                     double betaX = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
                     double thetaX = roll + betaX;
-                    System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
+   //                 System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
                     double thetaY = pitch + betaY;
-                    System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
+   //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
-                    double altitude = 0.098 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
+                    //double altitude = 0.1185 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
+                    double altitude = 0.099 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     
                     //now find x and y offset
                     double xOffset = altitude * Math.tan(thetaX);
@@ -233,7 +252,7 @@ public class TestColourDetection {
 	        		try {
 						client.send("pos:" + xOffset + ":" + yOffset);
 						client.send("alt:" + altitude);
-						client.send("dist:"+ actualDistance);
+				//		client.send("dist:"+ actualDistance);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -249,8 +268,19 @@ public class TestColourDetection {
 					e.printStackTrace();
 				}
 	        }
+			try {
+				client.send("mode:" + TestMavlinkReader.currentMode + ":" + TestMavlinkReader.currentCustomMode);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 	    }
+	    System.out.println("finished");
 	    return;
+	}
+    
+    private static double angleBetween(Point center, Point current, Point previous) {
+    	return Math.toDegrees(Math.atan2(current.x - center.x,current.y - center.y)-
+                Math.atan2(previous.x- center.x,previous.y- center.y));
 	}
 
 	private static double squared(double value) {

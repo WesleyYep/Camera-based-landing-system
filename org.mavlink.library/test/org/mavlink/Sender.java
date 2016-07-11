@@ -90,12 +90,13 @@ public class Sender {
 		return false;
 	}
 	
-	public void land(float radians) {
+	public void land(float degrees) {
+		System.out.println("Setting landing target to: x=" + degrees + ", y=0 degrees");
 		msg_landing_target msg = new msg_landing_target(255,1);
 		msg.time_usec = (System.currentTimeMillis() - startTime)*1000;
 		msg.target_num = 1;
 		msg.frame = MAV_FRAME.MAV_FRAME_GLOBAL;
-		msg.angle_x = radians;
+		msg.angle_x = (float) Math.toRadians(degrees);
 		msg.angle_y = 0;
 		msg.distance = 0;
 		msg.size_x = 0;
@@ -185,6 +186,30 @@ public class Sender {
 			System.out.println("Setting base mode to: " + msg.base_mode);
 		}
 
+        byte[] result;
+		try {
+			result = msg.encode();
+	        spc.writeData(result);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void test(int throttle, int speed) {
+		msg_command_long msg = new msg_command_long(255,1);
+		msg.target_system = 1;
+		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_SYSTEM_CONTROL;
+
+		msg.command = MAV_CMD.MAV_CMD_DO_CHANGE_SPEED;
+		msg.param1 = 0;
+		msg.param2 = speed;
+		msg.param3 = throttle;
+		msg.param4 = 0;
+		msg.param5 = 0;
+		msg.param6 = 0;
+		msg.param7 = 0;
+		msg.confirmation = 0;
+		
         byte[] result;
 		try {
 			result = msg.encode();

@@ -34,6 +34,7 @@ import java.util.Scanner;
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
 import org.mavlink.messages.ja4rtor.msg_global_position_int;
+import org.mavlink.messages.ja4rtor.msg_heartbeat;
 
 import jssc.SerialPortList;
 
@@ -49,11 +50,55 @@ public class TestMavlinkReader {
 	public static float yaw = 0;
 	private static float initialAltitude = 0;
 	public static float altitude = 0;
+	public static double currentMode = 0;
+	public static double currentCustomMode = 0; 
+	private static boolean armed = false;
 	
     /**
      * @param args
      */
     public static void main(String[] args) {
+		SerialPortCommunicator spc = new SerialPortCommunicator();
+    	try {
+			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+			spc.openPort(SerialPortList.getPortNames()[0]);
+    	} catch (Exception ex) {
+    		System.err.println("No ports available");
+    	}
+		Sender sender = new Sender(spc);
+		
+		if (!spc.isOpened()) {
+			System.err.println("Port not opened");
+		} else {
+			System.out.println("Port opened!");
+		}
+    	
+    	TestColourDetection.client = new Client("169.254.110.196", 55555, data ->{
+			System.out.println(data.toString());
+			String[] arr = data.toString().split(":");
+			if (data.toString().startsWith("stream:")) {
+				TestColourDetection.isStreaming = arr[1].equals("true");
+			} else if (data.toString().startsWith("slider:")) {
+				if (arr[1].equals("h")) {
+					TestColourDetection.hMin = Double.parseDouble(arr[2]);
+					TestColourDetection.hMax = Double.parseDouble(arr[3]);
+				} else if (arr[1].equals("s")) {
+					TestColourDetection.sMin = Double.parseDouble(arr[2]);
+					TestColourDetection.sMax = Double.parseDouble(arr[3]);
+				} else if (arr[1].equals("v")) {
+					TestColourDetection.vMin = Double.parseDouble(arr[2]);
+					TestColourDetection.vMax = Double.parseDouble(arr[3]);
+				}
+			} else if (data.toString().startsWith("arm:")) {
+				testArm(sender, arr[1].equals("true"));	
+			} else if (data.toString().startsWith("mode:")) {
+				sender.heartbeat();
+				sender.mode(arr[1], arr[2].equals("true"));
+			} else if (data.toString().startsWith("land:")) {
+				land(sender, arr[1]); //eg. land:10
+			}
+		});
+    	
     	//start camera for QR detection
     	Thread t = new Thread(new Runnable(){
 			@Override
@@ -69,17 +114,6 @@ public class TestMavlinkReader {
     	Thread t2 = new Thread(new Runnable() {
     		@Override
 			public void run() {
-				SerialPortCommunicator spc = new SerialPortCommunicator();
-				System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-				spc.openPort(SerialPortList.getPortNames()[0]);
-				Sender sender = new Sender(spc);
-			
-				if (!spc.isOpened()) {
-					System.err.println("Port not opened");
-					System.exit(-1);
-				} else {
-					System.out.println("Port opened!");
-				}
 				String cmd = "";
 				if (args.length != 0) {
 					cmd = args[0];
@@ -105,26 +139,25 @@ public class TestMavlinkReader {
 					sender.mode(args.length > 1 ? args[1] : "", args.length > 2 && args[2].equals("armed"));
 				} else if (cmd.equals("land")) {
 					land(sender, args[1]);
+				} else if (cmd.equals("test")) {
+					sender.test(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 				} else {
 					testAngle(sender, spc);
 				}
     		}
     	});
     	
-    	if (args.length < 2) {
-    		t.start();
-    	}
+	//	t.start();
     	t2.start();
     	
     }
     
-    private static void land(Sender sender, String radiansString) {
+    private static void land(Sender sender, String degreesString) {
     	while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
 	    	}
-			sender.land(Float.parseFloat(radiansString));
-			System.out.println("sent land position");
+			sender.land(Float.parseFloat(degreesString));
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
@@ -181,6 +214,11 @@ public class TestMavlinkReader {
                     nb++;
                 	altitude = ((msg_global_position_int)msg).alt - initialAltitude;
           //      	System.out.println("altitude=" + altitude);
+                } else if (msg != null && msg.messageType == msg_heartbeat.MAVLINK_MSG_ID_HEARTBEAT) {
+          //      	System.out.println("got heartbeat message!!!!!");
+                	nb++;
+                	currentMode = ((msg_heartbeat)msg).base_mode;
+                	currentCustomMode = ((msg_heartbeat)msg).custom_mode;
                 }
             }
         } catch (IOException e) {
