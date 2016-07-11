@@ -273,6 +273,12 @@ public class ChatApp extends Application {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("mode:")) {
 					modeLabel.setText("Mode: " + arr[1] + " , Custom Mode: " + arr[2]);
+				} else if (data.toString().startsWith("flat")) {
+					if (arr[1].equals("true")) {
+						landLabel.setText("Landing pad is flat, can land safely");
+					} else {
+						landLabel.setText("Landing pad not flat");
+					}
 				}
 			});
 		});

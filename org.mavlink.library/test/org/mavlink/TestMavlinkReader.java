@@ -52,27 +52,26 @@ public class TestMavlinkReader {
 	public static float altitude = 0;
 	public static double currentMode = 0;
 	public static double currentCustomMode = 0; 
-	private static boolean armed = false;
 	
     /**
      * @param args
      */
     public static void main(String[] args) {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
+		Sender sender = new Sender(spc);
     	try {
 			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
 			spc.openPort(SerialPortList.getPortNames()[0]);
+			
+			if (!spc.isOpened()) {
+				System.err.println("Port not opened");
+			} else {
+				System.out.println("Port opened!");
+			}
     	} catch (Exception ex) {
     		System.err.println("No ports available");
     	}
-		Sender sender = new Sender(spc);
-		
-		if (!spc.isOpened()) {
-			System.err.println("Port not opened");
-		} else {
-			System.out.println("Port opened!");
-		}
-    	
+	    	
     	TestColourDetection.client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());
 			String[] arr = data.toString().split(":");
@@ -98,7 +97,7 @@ public class TestMavlinkReader {
 				land(sender, arr[1]); //eg. land:10
 			}
 		});
-    	
+	
     	//start camera for QR detection
     	Thread t = new Thread(new Runnable(){
 			@Override
@@ -147,8 +146,8 @@ public class TestMavlinkReader {
     		}
     	});
     	
-	//	t.start();
-    	t2.start();
+		t.start();
+//    	t2.start();
     	
     }
     

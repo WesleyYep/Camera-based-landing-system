@@ -120,15 +120,16 @@ public class TestColourDetection {
 	        		double dM01 = moments.m01;
 	    	        double dM10 = moments.m10;
 	    	        double dArea = moments.m00;
-	    	        if (dArea > 50) {
+	    	        if (dArea > 100 && dArea < 20000) {
 	    	        	//calculate the position of the marker
 	    	        	int posX = (int) (dM10 / dArea);
 	    	        	int posY = (int) (dM01 / dArea);
 	    	        	markers.add(new AbstractMap.SimpleEntry<Point,Double>(new Point(posX, posY), dArea));
 	    	//        	System.out.println("BLOB " + i + ": x: " + posX + " - y: " + posY + " area: " + dArea);
 	    	        } else {
-	    	//        	System.out.println("area is only " + dArea);
+//	    	        	System.out.println("area is only " + dArea);
 	    	        }
+//	    	        System.out.println("marker size: " + dArea);
 	        	}
 	        	double min = 999999998;
 	        	int firstMarker = 0;  //top-left marker
@@ -168,9 +169,10 @@ public class TestColourDetection {
 	        			distances.put(distance, actualMarkers.get(i));
 	        		}
 	        		int count = 0;
-	        		while (actualMarkers.size() > 3 && count < 10){
+	        		while (actualMarkers.size() > 3 && count < 100){
 	        			actualMarkers.remove(distances.lastEntry().getValue());
 	        			count++;
+	        			if (count == 100) { System.out.println("too many markers"); }
 	        		}
 	        	}
 	        	if (actualMarkers.size() == 3) {
