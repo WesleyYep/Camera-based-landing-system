@@ -60,18 +60,18 @@ public class TestMavlinkReader {
     public static void main(String[] args) {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
 		Sender sender = new Sender(spc);
-//    	try {
-//			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-//			spc.openPort(SerialPortList.getPortNames()[0]);
-//			
-//			if (!spc.isOpened()) {
-//				System.err.println("Port not opened");
-//			} else {
-//				System.out.println("Port opened!");
-//			}
-//    	} catch (Exception ex) {
-//    		System.err.println("No ports available");
-//    	}
+    	try {
+			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+			spc.openPort(SerialPortList.getPortNames()[0]);
+			
+			if (!spc.isOpened()) {
+				System.err.println("Port not opened");
+			} else {
+				System.out.println("Port opened!");
+			}
+    	} catch (Exception ex) {
+    		System.err.println("No ports available");
+    	}
 //    	
 		Thread t3 = new Thread(new Runnable() {
 			@Override
