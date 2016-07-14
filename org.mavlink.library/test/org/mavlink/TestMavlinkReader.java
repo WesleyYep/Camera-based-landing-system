@@ -60,22 +60,27 @@ public class TestMavlinkReader {
     public static void main(String[] args) {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
 		Sender sender = new Sender(spc);
-    	try {
-			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-			spc.openPort(SerialPortList.getPortNames()[0]);
-			
-			if (!spc.isOpened()) {
-				System.err.println("Port not opened");
-			} else {
-				System.out.println("Port opened!");
+//    	try {
+//			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+//			spc.openPort(SerialPortList.getPortNames()[0]);
+//			
+//			if (!spc.isOpened()) {
+//				System.err.println("Port not opened");
+//			} else {
+//				System.out.println("Port opened!");
+//			}
+//    	} catch (Exception ex) {
+//    		System.err.println("No ports available");
+//    	}
+//    	
+		Thread t3 = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				//start move message sending
+				command(sender);
 			}
-    	} catch (Exception ex) {
-    		System.err.println("No ports available");
-    	}
-    	
-		//start move message sending
-		command(sender);
-	    	
+		});
+		
     	TestColourDetection.client = new Client("169.254.110.196", 55555, data ->{
 			System.out.println(data.toString());		
 			String[] arr = data.toString().split(":");
@@ -153,24 +158,24 @@ public class TestMavlinkReader {
     	});
     	
 		t.start();
-		t2.start();
-    	
+	//	t2.start();
+    	t3.start();
     }
     
     private static void command(Sender sender) {
     	while (true) {
 			sender.heartbeat();
 			if (direction.equals("forward")) {
-//				sender.land(0, 1);
+//				sender.land(0, 10);
 				sender.command(0, 1, 0);
 			} else if (direction.equals("backward")) {
-//				sender.land(0, -1);
+//				sender.land(0, -10);
 				sender.command(0, -1, 0);
 			} else if (direction.equals("left")) {
-//				sender.land(-1, 0);
+//				sender.land(-10, 0);
 				sender.command(-1, 0, 0);
 			} else if (direction.equals("right")) {
-//				sender.land(1, 0);
+//				sender.land(10, 0);
 				sender.command(1, 0, 0);
 			}
 			try {

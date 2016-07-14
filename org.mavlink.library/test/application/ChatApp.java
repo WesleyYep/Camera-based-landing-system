@@ -241,8 +241,8 @@ public class ChatApp extends Application {
             	try {
 	                switch (event.getCode()) {
 	                    case W:  connection.send("command:forward"); break;
-	                    case A:  connection.send("backward"); break;
-	                    case S:  connection.send("command:left"); break;
+	                    case A:  connection.send("command:left"); break;
+	                    case S:  connection.send("command:backward"); break;
 	                    case D:  connection.send("command:right"); break;
 					default:
 						break;
