@@ -128,7 +128,7 @@ public class TestMavlinkReader {
 				} else if (cmd.equals("angle")){
 					testAngle(sender, spc);
 				} else if (cmd.equals("cmd")) {
-					testCommands(sender, args.length > 1 ? Integer.parseInt(args[1]) : 1300);
+					testCommands(sender, Integer.parseInt(args[1]), Integer.parseInt(args[2]), Integer.parseInt(args[3]));
 				} else if (cmd.equals("arm")) {
 					testArm(sender, args.length > 1 && args[1].equals("true"));
 				} else if (cmd.equals("hb")) {
@@ -146,8 +146,8 @@ public class TestMavlinkReader {
     		}
     	});
     	
-		t.start();
-//    	t2.start();
+//		t.start();
+		t2.start();
     	
     }
     
@@ -169,12 +169,12 @@ public class TestMavlinkReader {
     	}
 	}
     
-    private static void testCommands(Sender sender, int value) {
+    private static void testCommands(Sender sender,/* int value*/ int x, int y, int z) {
 		while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
 	    	}
-			if (sender.command(value)) {
+			if (sender.command(x, y, z)) {
 				System.out.println("sent manual move message");
 			}
 			try {
@@ -230,6 +230,7 @@ public class TestMavlinkReader {
 	}
 
 	public static void testArm(Sender sender, boolean arm) {
+		sender.heartbeat();
     	if(sender.arm(arm)) {
     		System.out.println("Successfully set ARMED to: " + arm);
     	}

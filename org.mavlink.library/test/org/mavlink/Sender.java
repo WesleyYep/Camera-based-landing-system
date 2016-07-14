@@ -52,7 +52,7 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean command(int value) {
+	public boolean command(/*int value*/int x, int y, int z) {
 //	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
 //		msg.target_system = 1;
 //		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
@@ -68,14 +68,14 @@ public class Sender {
 		msg.time_boot_ms = System.currentTimeMillis() - startTime;
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
-		msg.coordinate_frame = MAV_FRAME.MAV_FRAME_LOCAL_OFFSET_NED;
-		msg.type_mask = 0b0000000000000000; //ignore everything except velocity
-		msg.x = 10;
-		msg.y = 10;
-		msg.z = -10;
-		msg.vx = 1;
-		msg.vy = 1;
-		msg.vz = -1;
+		msg.coordinate_frame = MAV_FRAME.MAV_FRAME_BODY_OFFSET_NED; //velocity relative to vehicle heading
+		msg.type_mask = 0b0000111111000111; //ignore everything except velocity
+		msg.x = 1;
+		msg.y = 1;
+		msg.z = 1;
+		msg.vx = x;
+		msg.vy = y;
+		msg.vz = z;
 		msg.afx = 1;
 		msg.afy = 1;
 		msg.afz = 1;
@@ -196,6 +196,7 @@ public class Sender {
 	}
 
 	public void test(int throttle, int speed) {
+		System.out.println("TEST: thr=" + throttle + ", speed=" + speed);
 		msg_command_long msg = new msg_command_long(255,1);
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_SYSTEM_CONTROL;
