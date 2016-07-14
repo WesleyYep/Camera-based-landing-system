@@ -64,21 +64,24 @@ public class Sender {
 //		msg.chan6_raw = 65535;
 //		msg.chan7_raw = 65535;
 //		msg.chan8_raw = 65535;
+		System.out.println("sending move message: vx=" + x + ", vy=" + y + ", vz=" + z);
 		msg_set_position_target_local_ned msg = new msg_set_position_target_local_ned(255, 1);
 		msg.time_boot_ms = System.currentTimeMillis() - startTime;
-		msg.target_system = 1;
+		msg.target_system = 1; //try 0?
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
 		msg.coordinate_frame = MAV_FRAME.MAV_FRAME_BODY_OFFSET_NED; //velocity relative to vehicle heading
 		msg.type_mask = 0b0000111111000111; //ignore everything except velocity
-		msg.x = 1;
-		msg.y = 1;
-		msg.z = 1;
+		msg.x = 0;
+		msg.y = 0;
+		msg.z = 0;
 		msg.vx = x;
 		msg.vy = y;
 		msg.vz = z;
-		msg.afx = 1;
-		msg.afy = 1;
-		msg.afz = 1;
+		msg.afx = 0;
+		msg.afy = 0;
+		msg.afz = 0;
+		msg.yaw = 0;
+		msg.yaw_rate = 0;
 		byte[] result;
 		try {
 			result = msg.encode();
@@ -90,14 +93,14 @@ public class Sender {
 		return false;
 	}
 	
-	public void land(float degrees) {
-		System.out.println("Setting landing target to: x=" + degrees + ", y=0 degrees");
+	public void land(float xDegrees, float yDegrees) {
+		System.out.println("Setting landing target to: x=" + xDegrees + ", y=" + yDegrees + " degrees");
 		msg_landing_target msg = new msg_landing_target(255,1);
 		msg.time_usec = (System.currentTimeMillis() - startTime)*1000;
 		msg.target_num = 1;
-		msg.frame = MAV_FRAME.MAV_FRAME_GLOBAL;
-		msg.angle_x = (float) Math.toRadians(degrees);
-		msg.angle_y = 0;
+		msg.frame = MAV_FRAME.MAV_FRAME_BODY_OFFSET_NED; //I think?
+		msg.angle_x = (float) Math.toRadians(xDegrees);
+		msg.angle_y = (float) Math.toRadians(yDegrees);
 		msg.distance = 0;
 		msg.size_x = 0;
 		msg.size_y = 0;

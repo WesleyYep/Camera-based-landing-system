@@ -51,7 +51,8 @@ public class TestMavlinkReader {
 	private static float initialAltitude = 0;
 	public static float altitude = 0;
 	public static double currentMode = 0;
-	public static double currentCustomMode = 0; 
+	public static double currentCustomMode = 0;
+	private static String direction = "";
 	
     /**
      * @param args
@@ -71,9 +72,12 @@ public class TestMavlinkReader {
     	} catch (Exception ex) {
     		System.err.println("No ports available");
     	}
+    	
+		//start move message sending
+		command(sender);
 	    	
     	TestColourDetection.client = new Client("169.254.110.196", 55555, data ->{
-			System.out.println(data.toString());
+			System.out.println(data.toString());		
 			String[] arr = data.toString().split(":");
 			if (data.toString().startsWith("stream:")) {
 				TestColourDetection.isStreaming = arr[1].equals("true");
@@ -95,6 +99,8 @@ public class TestMavlinkReader {
 				sender.mode(arr[1], arr[2].equals("true"));
 			} else if (data.toString().startsWith("land:")) {
 				land(sender, arr[1]); //eg. land:10
+			} else if (data.toString().startsWith("command:")) {
+				direction = arr[1];
 			}
 		});
 	
@@ -146,17 +152,39 @@ public class TestMavlinkReader {
     		}
     	});
     	
-//		t.start();
+		t.start();
 		t2.start();
     	
     }
+    
+    private static void command(Sender sender) {
+    	while (true) {
+			sender.heartbeat();
+			if (direction.equals("forward")) {
+//				sender.land(0, 1);
+				sender.command(0, 1, 0);
+			} else if (direction.equals("backward")) {
+//				sender.land(0, -1);
+				sender.command(0, -1, 0);
+			} else if (direction.equals("left")) {
+//				sender.land(-1, 0);
+				sender.command(-1, 0, 0);
+			} else if (direction.equals("right")) {
+//				sender.land(1, 0);
+				sender.command(1, 0, 0);
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+		}
+	}   
     
     private static void land(Sender sender, String degreesString) {
     	while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
 	    	}
-			sender.land(Float.parseFloat(degreesString));
+			sender.land(Float.parseFloat(degreesString), 0);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}

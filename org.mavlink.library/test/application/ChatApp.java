@@ -7,6 +7,7 @@ import org.mavlink.StreamServer;
 import org.opencv.core.Core;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
@@ -24,6 +25,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
@@ -70,6 +72,7 @@ public class ChatApp extends Application {
 	
 	private Parent createContent(){
 		messages.setPrefHeight(550);
+		input.setDisable(true);
 		//Send event
 		btn.setOnAction(event -> {
 			if(!input.getText().isEmpty()){
@@ -231,6 +234,22 @@ public class ChatApp extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Base Station");
 		primaryStage.show();
+		
+		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+            	try {
+	                switch (event.getCode()) {
+	                    case W:  connection.send("command:forward"); break;
+	                    case A:  connection.send("backward"); break;
+	                    case S:  connection.send("command:left"); break;
+	                    case D:  connection.send("command:right"); break;
+					default:
+						break;
+	                }
+            	} catch (Exception e) { e.printStackTrace(); }
+            }
+        });
 	}
 
 	@Override
