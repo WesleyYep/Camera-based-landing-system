@@ -55,7 +55,6 @@ public class TestColourDetection {
 	
         if(!cap.isOpened()) {
             System.out.println("cannot open camera");
-            return;
         }
 
 	    //Capture a temporary image from the camera

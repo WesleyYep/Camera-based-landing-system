@@ -1,5 +1,8 @@
 package application;
 
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import org.controlsfx.control.RangeSlider;
 import org.mavlink.NetworkConnection;
 import org.mavlink.Server;
@@ -280,6 +283,8 @@ public class ChatApp extends Application {
 				String[] arr = data.toString().split(":");
 				if (data.toString().startsWith("start")) {
 					sliderChanged("all");
+					Joystick joystick = new Joystick(connection);
+					joystick.setVisible(true);
 				} else if (data.toString().startsWith("pos:")) {
 					//pos:x:y
 					double x = Double.parseDouble(arr[1]) * -1; //they appear reversed

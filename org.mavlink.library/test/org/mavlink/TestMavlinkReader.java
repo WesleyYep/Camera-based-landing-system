@@ -53,6 +53,7 @@ public class TestMavlinkReader {
 	public static double currentMode = 0;
 	public static double currentCustomMode = 0;
 	private static String direction = "";
+	private static float xVel, yVel = 0;
 	
     /**
      * @param args
@@ -106,6 +107,8 @@ public class TestMavlinkReader {
 				land(sender, arr[1]); //eg. land:10
 			} else if (data.toString().startsWith("command:")) {
 				direction = arr[1];
+//				xVel = Integer.parseInt(arr[1]) / 10.0;
+//				yVel = Integer.parseInt(arr[2]) / 10.0;
 			}
 		});
 	
@@ -165,6 +168,7 @@ public class TestMavlinkReader {
     private static void command(Sender sender) {
     	while (true) {
 			sender.heartbeat();
+//			sender.command(xVel, yVel, 0);
 			if (direction.equals("forward")) {
 //				sender.land(0, 10);
 				sender.command(0, 1, 0);
