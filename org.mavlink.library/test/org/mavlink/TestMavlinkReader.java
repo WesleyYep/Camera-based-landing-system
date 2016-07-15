@@ -107,8 +107,8 @@ public class TestMavlinkReader {
 				land(sender, arr[1]); //eg. land:10
 			} else if (data.toString().startsWith("command:")) {
 				direction = arr[1];
-//				xVel = Integer.parseInt(arr[1]) / 10.0;
-//				yVel = Integer.parseInt(arr[2]) / 10.0;
+//				xVel = Integer.parseInt(arr[1]) / 100.0;
+//				yVel = Integer.parseInt(arr[2]) / 100.0;
 			}
 		});
 	
