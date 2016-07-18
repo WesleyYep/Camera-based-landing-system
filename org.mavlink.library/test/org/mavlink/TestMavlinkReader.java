@@ -54,13 +54,14 @@ public class TestMavlinkReader {
 	public static double currentCustomMode = 0;
 	private static String direction = "";
 	private static float xVel, yVel = 0;
+	private static Sender sender;
 	
     /**
      * @param args
      */
     public static void main(String[] args) {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
-		Sender sender = new Sender(spc);
+		sender = new Sender(spc);
     	try {
 			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
 			spc.openPort(SerialPortList.getPortNames()[0]);
@@ -101,8 +102,7 @@ public class TestMavlinkReader {
 			} else if (data.toString().startsWith("arm:")) {
 				testArm(sender, arr[1].equals("true"));	
 			} else if (data.toString().startsWith("mode:")) {
-				sender.heartbeat();
-				sender.mode(arr[1], arr[2].equals("true"));
+				changeMode(arr[1], arr[2].equals("true"));
 			} else if (data.toString().startsWith("land:")) {
 				land(sender, arr[1]); //eg. land:10
 			} else if (data.toString().startsWith("command:")) {
@@ -161,26 +161,34 @@ public class TestMavlinkReader {
     	});
     	
 		t.start();
-	//	t2.start();
+		t2.start();
     	t3.start();
     }
     
-    private static void command(Sender sender) {
+    public static void changeMode(String mode, boolean armed) {
+    	sender.heartbeat();
+		sender.mode(mode, armed);
+	}
+
+	private static void command(Sender sender) {
     	while (true) {
 			sender.heartbeat();
 //			sender.command(xVel, yVel, 0);
 			if (direction.equals("forward")) {
-//				sender.land(0, 10);
-				sender.command(0, 1, 0);
+				if (currentCustomMode == 9){ sender.land(0, 30); }
+				else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
 			} else if (direction.equals("backward")) {
-//				sender.land(0, -10);
-				sender.command(0, -1, 0);
+				if (currentCustomMode == 9){ sender.land(0, -30); }
+				else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
 			} else if (direction.equals("left")) {
-//				sender.land(-10, 0);
-				sender.command(-1, 0, 0);
+				if (currentCustomMode == 9){ sender.land(-30, 0); }
+				else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
 			} else if (direction.equals("right")) {
-//				sender.land(10, 0);
-				sender.command(1, 0, 0);
+				if (currentCustomMode == 9){ sender.land(30, 0); }
+				else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
+			} else if (direction.equals("centre")) {
+				if (currentCustomMode == 9){ sender.land(0, 0); }
+				else if (currentCustomMode == 4){ sender.command(0,0,0); }		
 			}
 			try {
 				Thread.sleep(1000);

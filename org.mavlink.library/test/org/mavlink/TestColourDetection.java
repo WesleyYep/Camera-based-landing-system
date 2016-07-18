@@ -24,26 +24,9 @@ public class TestColourDetection {
 //    private static boolean isBinary = false;
     public static double hMin, hMax, sMin, sMax, vMin, vMax;
     private static boolean isLandingPadFlat = false;
+	private static boolean isBinary = false;
     
     public static void start() {
-//		Client client = new Client("169.254.110.196", 55555, data ->{
-//			System.out.println(data.toString());
-//			String[] arr = data.toString().split(":");
-//			if (data.toString().startsWith("stream:")) {
-//				isStreaming = arr[1].equals("true");
-//			} else if (data.toString().startsWith("slider:")) {
-//				if (arr[1].equals("h")) {
-//					hMin = Double.parseDouble(arr[2]);
-//					hMax = Double.parseDouble(arr[3]);
-//				} else if (arr[1].equals("s")) {
-//					sMin = Double.parseDouble(arr[2]);
-//					sMax = Double.parseDouble(arr[3]);
-//				} else if (arr[1].equals("v")) {
-//					vMin = Double.parseDouble(arr[2]);
-//					vMax = Double.parseDouble(arr[3]);
-//				}
-//			}
-//		});
 		Client streamClient = new Client("169.254.110.196", 55556, null);
 		try {
 			client.startConnection();
@@ -97,15 +80,15 @@ public class TestColourDetection {
 	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
 	
 	        //send binary image here
-//	        if (isStreaming && isBinary) {
-//		        byte[] data = new byte[(int) (width * height * imgThresholded.channels())];
-//		        imgThresholded.get(0, 0, data);
-//		        try {
-//		        	streamClient.sendBytes(data);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//	        }
+	        if (isStreaming && isBinary ) {
+		        byte[] data = new byte[(int) (width * height * imgThresholded.channels())];
+		        imgThresholded.get(0, 0, data);
+		        try {
+		        	streamClient.sendBytes(data);
+				} catch (Exception e) {
+					failure(e);
+				}
+	        }
 	        
 	        //see if we can find blobs based on contours
 	        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
@@ -119,7 +102,7 @@ public class TestColourDetection {
 	        		double dM01 = moments.m01;
 	    	        double dM10 = moments.m10;
 	    	        double dArea = moments.m00;
-	    	        if (dArea > 100 && dArea < 20000) {
+	    	        if (dArea > 500 && dArea < 20000) {
 	    	        	//calculate the position of the marker
 	    	        	int posX = (int) (dM10 / dArea);
 	    	        	int posY = (int) (dM01 / dArea);
@@ -170,13 +153,12 @@ public class TestColourDetection {
 	        		int count = 0;
 	        		while (actualMarkers.size() > 3 && count < 100){
 	        			actualMarkers.remove(distances.lastEntry().getValue());
+	        			distances.remove(distances.lastKey());
 	        			count++;
 	        			if (count == 100) { System.out.println("too many markers"); }
 	        		}
 	        	}
 	        	if (actualMarkers.size() == 3) {
-//	        		System.out.println("FIRST: " + firstMarker);
-//	        		Imgproc.circle(imgOriginal, actualMarkers.get(firstMarker), 2, new Scalar(0,255,0));
 	        		double totalX = 0, totalY =0;
 	        		for (Point p : actualMarkers) {
 	        			totalX += p.x;
@@ -184,7 +166,14 @@ public class TestColourDetection {
 	        		}
 	        		double avX = totalX / 3;
 	        		double avY = totalY / 3;
-		  //      	System.out.println("AVERAGE: x: " + avX + " - y: " + avY);
+	        		double totalVarX = 0, totalVarY = 0;
+	        		for (Point p : actualMarkers) {
+	        			totalVarX += squared(p.x-avX);
+	        			totalVarY += squared(p.y-avY);
+	        		}
+	        		double varianceX = totalVarX/3;
+	        		double varianceY = totalVarY/3;
+	   //     		System.out.println("variance = x:" + varianceX + " , y: " + varianceY);
 	        		Imgproc.circle(imgOriginal, new Point(avX, avY), 2, new Scalar(0,255,0),5);
 	        		
                     int centreX = width/2;
@@ -225,33 +214,35 @@ public class TestColourDetection {
                     	angle = angleBetween(actualMarkers.get(0), actualMarkers.get(1), actualMarkers.get(2));                    	
                     	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
                     }
-         //           System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+                    System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
                     try {
+                    	double normalRatio = varianceY > 1000 ? 1.14 : 1.44; //based on current A3 landing pad
 	                    if (isLandingPadFlat) {
-	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || ratio > 1.1 || ratio < 0.9) {
+	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || Math.abs(normalRatio - ratio) > 0.02) {
 	                    		client.send("flat:false");
 	                    		isLandingPadFlat = false;
 	                    	}
 	                    } else {
-	                    	if (Math.abs(Math.abs(angle)%180-90) <= 5 && ratio < 1.1 && ratio > 0.9) {
+	                    	if (Math.abs(Math.abs(angle)%180-90) <= 5 && Math.abs(normalRatio - ratio) < 0.02) {
 	                    		client.send("flat:true");
 	                    		isLandingPadFlat = true;
 	                    	}
 	                    }
                     } catch (Exception e) {
-                    	e.printStackTrace();
+                    	failure(e);
                     }
                     
                     //now find altitude - swap since camera is at 90 degrees to drone direction
-                    double betaY = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
-                    double betaX = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
+                    double betaX = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
+                    double betaY = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
                     double thetaX = roll + betaX;
    //                 System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
                     double thetaY = pitch + betaY;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
                     //double altitude = 0.1185 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
-                    double altitude = 0.099 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
+                    double actualSizeMetres = varianceY > 1000 ? 0.099 : 0.020;
+                    double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     
                     //now find x and y offset
                     double xOffset = altitude * Math.tan(thetaX);
@@ -263,29 +254,37 @@ public class TestColourDetection {
 						client.send("alt:" + altitude);
 				//		client.send("dist:"+ actualDistance);
 					} catch (Exception e) {
-						e.printStackTrace();
+						failure(e);
 					}
 	        	}
 	        }
 
-	        if (isStreaming) {
+	        if (isStreaming && !isBinary) {
 		        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
 		        imgOriginal.get(0, 0, data);
 		        try {
 		        	streamClient.sendBytes(data);
 				} catch (Exception e) {
-					e.printStackTrace();
+					failure(e);
 				}
 	        }
 			try {
 				client.send("mode:" + TestMavlinkReader.currentMode + ":" + TestMavlinkReader.currentCustomMode);
 			} catch (Exception e) {
-				e.printStackTrace();
+				failure(e);
 			}
 	    }
 	    System.out.println("finished");
 	    return;
 	}
+    
+    private static void failure(Exception e) {
+    	e.printStackTrace();
+    	//switch to stabilize
+    	System.out.println("connection lost! Switching to stabilize mode");
+    	TestMavlinkReader.changeMode("stabilize", true);
+    	System.exit(-1);
+    }
     
     private static double angleBetween(Point center, Point current, Point previous) {
     	return Math.toDegrees(Math.atan2(current.x - center.x,current.y - center.y)-

@@ -52,7 +52,7 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean command(/*int value*/float x, float y, float z) {
+	public boolean command(/*int value*/double x, double y, double z) {
 //	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
 //		msg.target_system = 1;
 //		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
@@ -74,9 +74,9 @@ public class Sender {
 		msg.x = 0;
 		msg.y = 0;
 		msg.z = 0;
-		msg.vx = x;
-		msg.vy = y;
-		msg.vz = z;
+		msg.vx = (float) x;
+		msg.vy = (float) y;
+		msg.vz = (float) z;
 		msg.afx = 0;
 		msg.afy = 0;
 		msg.afz = 0;

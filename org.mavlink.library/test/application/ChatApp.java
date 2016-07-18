@@ -64,8 +64,10 @@ public class ChatApp extends Application {
 	private RadioButton stabilizeModeButton = new RadioButton("Stabilize");
 	private RadioButton loiterModeButton = new RadioButton("Loiter");
 	private RadioButton landModeButton = new RadioButton("Land");
+	private RadioButton guidedModeButton = new RadioButton("Guided");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
+	private long lastModeChangedTime;
 	
     static {
         // Load the native OpenCV library
@@ -95,6 +97,7 @@ public class ChatApp extends Application {
 		//ARM/DISARM event
 		armCheckBox.setOnAction(event -> {
 			try {
+				startTimer();
 				if(armCheckBox.isSelected() == true){
 					System.out.println("ARMED");
 					connection.send("arm:true");
@@ -113,6 +116,7 @@ public class ChatApp extends Application {
 			try{
 				if(stabilizeModeButton.isSelected() == true){
 					System.out.println("STABILIZE");
+					startTimer(); 
 					connection.send("mode:stabilize:"+armCheckBox.isSelected());
 				} 				
 			}catch (Exception e){
@@ -125,6 +129,7 @@ public class ChatApp extends Application {
 			try{
 				if(loiterModeButton.isSelected() == true){
 					System.out.println("LOITER");
+					startTimer(); 
 					connection.send("mode:loiter:"+armCheckBox.isSelected());
 				}
 			}catch (Exception e){
@@ -137,7 +142,20 @@ public class ChatApp extends Application {
 			try{
 				if(landModeButton.isSelected() == true){
 					System.out.println("LAND");
+					startTimer(); 
 					connection.send("mode:land:"+armCheckBox.isSelected());
+				}
+			}catch (Exception e){
+				messages.appendText("Failed to send\n");
+			}
+		});
+		
+		guidedModeButton.setOnAction(event -> {
+			try{
+				if(guidedModeButton.isSelected() == true){
+					System.out.println("GUIDED");
+					startTimer(); 
+					connection.send("mode:guided:"+armCheckBox.isSelected());
 				}
 			}catch (Exception e){
 				messages.appendText("Failed to send\n");
@@ -159,6 +177,7 @@ public class ChatApp extends Application {
 		stabilizeModeButton.setToggleGroup(group);
 		loiterModeButton.setToggleGroup(group);
 		landModeButton.setToggleGroup(group);
+		guidedModeButton.setToggleGroup(group);
 		
 		hSlider.setOnMouseReleased(event -> {sliderChanged("h");});
 		sSlider.setOnMouseReleased(event -> {sliderChanged("s");});
@@ -187,7 +206,7 @@ public class ChatApp extends Application {
 		menuA.getItems().add(new MenuItem("first"));
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
-		botMenu = new HBox(5,btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton);
+		botMenu = new HBox(5,btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton, guidedModeButton);
 		
 //		Polygon drone = new Polygon(172, 128, 212, 128, 192, 88); 
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
@@ -203,6 +222,10 @@ public class ChatApp extends Application {
         display.setMaxHeight(216);
         display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
 		return root;
+	}
+	
+	private void startTimer() {
+		lastModeChangedTime = System.currentTimeMillis();
 	}
 
 
@@ -247,6 +270,11 @@ public class ChatApp extends Application {
 	                    case A:  connection.send("command:left"); break;
 	                    case S:  connection.send("command:backward"); break;
 	                    case D:  connection.send("command:right"); break;
+	                    case X: connection.send("command:centre"); break;
+	                    case DIGIT1: connection.send("mode:stabilize:"+armCheckBox.isSelected()); startTimer(); break;
+	                    case DIGIT2: connection.send("mode:loiter:"+armCheckBox.isSelected()); startTimer(); break;
+	                    case DIGIT3: connection.send("mode:land:"+armCheckBox.isSelected()); startTimer(); break;
+	                    case DIGIT4: connection.send("mode:guided:"+armCheckBox.isSelected()); startTimer(); break;
 					default:
 						break;
 	                }
@@ -283,12 +311,12 @@ public class ChatApp extends Application {
 				String[] arr = data.toString().split(":");
 				if (data.toString().startsWith("start")) {
 					sliderChanged("all");
-					Joystick joystick = new Joystick(connection);
-					joystick.setVisible(true);
+			//		Joystick joystick = new Joystick(connection);
+			//		joystick.setVisible(true);
 				} else if (data.toString().startsWith("pos:")) {
 					//pos:x:y
-					double x = Double.parseDouble(arr[1]) * -1; //they appear reversed
-					double y = Double.parseDouble(arr[2]) * -1;
+					double x = Double.parseDouble(arr[1]) * -1; //appears reversed
+					double y = Double.parseDouble(arr[2]);
 					landingPad.setRotate(Math.toDegrees(Math.atan2(-x, -y))); //swap due to camera orientation
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 				} else if (data.toString().startsWith("dist:")) {
@@ -297,6 +325,14 @@ public class ChatApp extends Application {
 					altitudeText.setText(String.format("Altitude: %.2f" , Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("mode:")) {
 					modeLabel.setText("Mode: " + arr[1] + " , Custom Mode: " + arr[2]);
+					int mode = (int)Double.parseDouble(arr[1]);
+					int customMode = (int)Double.parseDouble(arr[2]);
+					if (mode > 200 && System.currentTimeMillis() - lastModeChangedTime > 3000) { armCheckBox.setSelected(true); }
+					else if (mode < 200 && System.currentTimeMillis() - lastModeChangedTime > 3000){ armCheckBox.setSelected(false); }
+					if ((mode == 81 || mode == 209) && customMode == 0 && System.currentTimeMillis() - lastModeChangedTime > 3000) { stabilizeModeButton.setSelected(true); }
+					else if ((mode == 81 || mode == 209) && customMode == 9 && System.currentTimeMillis() - lastModeChangedTime > 3000) { landModeButton.setSelected(true); }
+					else if ((mode == 81 || mode == 209) && customMode == 5 && System.currentTimeMillis() - lastModeChangedTime > 3000) { loiterModeButton.setSelected(true); }
+					else if ((mode == 89 || mode == 218) && customMode == 4 && System.currentTimeMillis() - lastModeChangedTime > 3000) { guidedModeButton.setSelected(true); }
 				} else if (data.toString().startsWith("flat")) {
 					if (arr[1].equals("true")) {
 						landLabel.setText("Landing pad is flat, can land safely");
