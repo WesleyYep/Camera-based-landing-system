@@ -55,6 +55,7 @@ public class TestMavlinkReader {
 	private static String direction = "";
 	private static float xVel, yVel = 0;
 	private static Sender sender;
+	private static double testValue = 0;
 	
     /**
      * @param args
@@ -109,6 +110,9 @@ public class TestMavlinkReader {
 				direction = arr[1];
 //				xVel = Integer.parseInt(arr[1]) / 100.0;
 //				yVel = Integer.parseInt(arr[2]) / 100.0;
+			} else if (data.toString().startsWith("test:")) {
+				System.out.println("Setting test value to: " + arr[1]);
+				testValue = Double.parseDouble(arr[1]);
 			}
 		});
 	
@@ -153,7 +157,8 @@ public class TestMavlinkReader {
 				} else if (cmd.equals("land")) {
 					land(sender, args[1]);
 				} else if (cmd.equals("test")) {
-					sender.test(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+					//sender.test(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+					//testGuidedCommand(Double.parseDouble(args[1]));
 				} else {
 					testAngle(sender, spc);
 				}
@@ -165,12 +170,29 @@ public class TestMavlinkReader {
     	t3.start();
     }
     
+    private static void testGuidedCommand() {
+    	while (true) {
+    		sender.heartbeat();
+    		sender.command(0, 0, testValue);
+    		System.out.println("TEST MODE ONLY!!!!!");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+    	}
+    }
+    
     public static void changeMode(String mode, boolean armed) {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
 
 	private static void command(Sender sender) {
+		//testing purposes
+		boolean test = true;
+		if (test) {
+			testGuidedCommand();
+		}
+		
     	while (true) {
 			sender.heartbeat();
 //			sender.command(xVel, yVel, 0);
