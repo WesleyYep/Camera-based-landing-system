@@ -65,6 +65,7 @@ public class ChatApp extends Application {
 	private RadioButton loiterModeButton = new RadioButton("Loiter");
 	private RadioButton landModeButton = new RadioButton("Land");
 	private RadioButton guidedModeButton = new RadioButton("Guided");
+	private RadioButton altHoldModeButton = new RadioButton("Alt_Hold");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
 	private long lastModeChangedTime;
@@ -159,6 +160,18 @@ public class ChatApp extends Application {
 				messages.appendText("Failed to send\n");
 			}
 		});
+		
+		altHoldModeButton.setOnAction(event -> {
+			try {
+				if (altHoldModeButton.isSelected() == true) {
+					System.out.println("ALT_HOLD");
+					startTimer();
+					connection.send("mode:alt_hold:" + armCheckBox.isSelected());
+				}
+			} catch (Exception e) {
+				messages.appendText("Failed to send\n");
+			}
+		});
 
 		streamToggle.setOnAction(event -> {
 			try {
@@ -176,6 +189,7 @@ public class ChatApp extends Application {
 		loiterModeButton.setToggleGroup(group);
 		landModeButton.setToggleGroup(group);
 		guidedModeButton.setToggleGroup(group);
+		altHoldModeButton.setToggleGroup(group);
 
 		hSlider.setOnMouseReleased(event -> {
 			sliderChanged("h");
@@ -211,7 +225,7 @@ public class ChatApp extends Application {
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
-				guidedModeButton);
+				guidedModeButton, altHoldModeButton);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
@@ -290,6 +304,9 @@ public class ChatApp extends Application {
 					case X:
 						connection.send("command:centre");
 						break;
+					case C:
+						connection.send("command:descend");
+						break;
 					case DIGIT1:
 						connection.send("mode:stabilize:" + armCheckBox.isSelected());
 						startTimer();
@@ -304,6 +321,10 @@ public class ChatApp extends Application {
 						break;
 					case DIGIT4:
 						connection.send("mode:guided:" + armCheckBox.isSelected());
+						startTimer();
+						break;
+					case DIGIT5:
+						connection.send("mode:alt_hold:" + armCheckBox.isSelected());
 						startTimer();
 						break;
 					default:
@@ -385,6 +406,9 @@ public class ChatApp extends Application {
 					} else if ((mode == 89 || mode == 218) && customMode == 4
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						guidedModeButton.setSelected(true);
+					} else if ((mode == 81 || mode == 209) && customMode == 2
+							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
+						altHoldModeButton.setSelected(true);
 					}
 				} else if (data.toString().startsWith("flat")) {
 					if (arr[1].equals("true")) {

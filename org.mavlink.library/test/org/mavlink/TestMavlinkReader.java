@@ -188,10 +188,10 @@ public class TestMavlinkReader {
 
 	private static void command(Sender sender) {
 		//testing purposes
-		boolean test = true;
-		if (test) {
-			testGuidedCommand();
-		}
+//		boolean test = true;
+//		if (test) {
+//			testGuidedCommand();
+//		}
 		
     	while (true) {
 			sender.heartbeat();
@@ -199,18 +199,27 @@ public class TestMavlinkReader {
 			if (direction.equals("forward")) {
 				if (currentCustomMode == 9){ sender.land(0, 30); }
 				else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
+				else { sender.rc("elev", 2000); }
 			} else if (direction.equals("backward")) {
 				if (currentCustomMode == 9){ sender.land(0, -30); }
 				else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
+				else { sender.rc("elev", 1000); }
 			} else if (direction.equals("left")) {
 				if (currentCustomMode == 9){ sender.land(-30, 0); }
 				else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
+				else { sender.rc("ail", 1000); }
 			} else if (direction.equals("right")) {
 				if (currentCustomMode == 9){ sender.land(30, 0); }
 				else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
+				else { sender.rc("ail", 2000); }
 			} else if (direction.equals("centre")) {
 				if (currentCustomMode == 9){ sender.land(0, 0); }
-				else if (currentCustomMode == 4){ sender.command(0,0,0); }		
+				else if (currentCustomMode == 4){ sender.command(0,0,0); }
+				else { sender.rc("thro", 1300); }
+			} else if (direction.equals("descend")) {
+				if (currentCustomMode == 9){ sender.land(0, 0); }
+				else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
+				else { sender.rc("none", 1000); }
 			}
 			try {
 				Thread.sleep(1000);

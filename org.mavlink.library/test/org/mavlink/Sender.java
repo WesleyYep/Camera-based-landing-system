@@ -52,18 +52,7 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean command(/*int value*/double x, double y, double z) {
-//	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
-//		msg.target_system = 1;
-//		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
-//		msg.chan1_raw = value;
-//		msg.chan2_raw = value;
-//		msg.chan3_raw = value;
-//		msg.chan4_raw = value;
-//		msg.chan5_raw = 65535; //UINT_16 max
-//		msg.chan6_raw = 65535;
-//		msg.chan7_raw = 65535;
-//		msg.chan8_raw = 65535;
+	public boolean command(double x, double y, double z) {
 		System.out.println("sending move message: vx=" + x + ", vy=" + y + ", vz=" + z);
 		msg_set_position_target_local_ned msg = new msg_set_position_target_local_ned(255, 1);
 		msg.time_boot_ms = 0; //System.currentTimeMillis() - startTime;
@@ -82,6 +71,30 @@ public class Sender {
 		msg.afz = 0;
 		msg.yaw = 0;
 		msg.yaw_rate = 0;
+		byte[] result;
+		try {
+			result = msg.encode();
+	        spc.writeData(result);
+	        return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public boolean rc(String mode, int value) {
+		System.out.println("sending rc message: value=" + value);
+	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
+		msg.target_system = 1;
+		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
+		msg.chan1_raw = mode.equals("ail") ? value : 0; //may need to change these
+		msg.chan2_raw = mode.equals("elev") ? value : 0;
+		msg.chan3_raw = mode.equals("thr") ? value : 0;
+		msg.chan4_raw = mode.equals("rud") ? value : 0;
+		msg.chan5_raw = 65535; //UINT_16 max
+		msg.chan6_raw = 65535;
+		msg.chan7_raw = 65535;
+		msg.chan8_raw = 65535;
 		byte[] result;
 		try {
 			result = msg.encode();
@@ -179,6 +192,10 @@ public class Sender {
 			System.out.println("Setting to loiter mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
 			msg.custom_mode = 5; //custom mode 5 = LOITER for APM copter
+		} else if (mode.equals("alt_hold")){
+			System.out.println("Setting to alt_hold mode");
+			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
+			msg.custom_mode = 2; //custom mode 2 = alt_hold for APM copter
 		} else {
 			System.out.println("Setting to stabilize mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1; //default
