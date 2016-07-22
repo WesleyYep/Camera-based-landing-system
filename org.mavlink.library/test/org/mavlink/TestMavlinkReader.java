@@ -261,6 +261,7 @@ public class TestMavlinkReader {
       
     private static void testAngle(Sender sender, SerialPortCommunicator spc) {
     	sender.send(0); //stops all streams
+    	sender.send(3); //rc raw values
 		sender.send(6); // barometer for altitude
 		sender.send(10); //pitch, yaw, roll
     	System.out.println("Sent request for orientation/altitude messages");
