@@ -35,6 +35,7 @@ import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
 import org.mavlink.messages.ja4rtor.msg_global_position_int;
 import org.mavlink.messages.ja4rtor.msg_heartbeat;
+import org.mavlink.messages.ja4rtor.msg_rc_channels_raw;
 
 import jssc.SerialPortList;
 
@@ -56,6 +57,10 @@ public class TestMavlinkReader {
 	private static float xVel, yVel = 0;
 	private static Sender sender;
 	private static double testValue = 0;
+	private static int channel1Mid = 0;
+	private static int channel2Mid = 0;
+	private static int channel3Mid = 0;
+	private static int channel4Mid = 0;
 	
     /**
      * @param args
@@ -294,6 +299,13 @@ public class TestMavlinkReader {
                 	nb++;
                 	currentMode = ((msg_heartbeat)msg).base_mode;
                 	currentCustomMode = ((msg_heartbeat)msg).custom_mode;
+                } else if (msg != null && msg.messageType == msg_rc_channels_raw.MAVLINK_MSG_ID_RC_CHANNELS_RAW) {
+                	System.out.println("got rc raw message!!!!!");
+                	nb++;
+                	channel1Mid = ((msg_rc_channels_raw)msg).chan1_raw;
+                	channel2Mid = ((msg_rc_channels_raw)msg).chan2_raw;
+                	channel3Mid = ((msg_rc_channels_raw)msg).chan3_raw;
+                	channel4Mid = ((msg_rc_channels_raw)msg).chan4_raw;
                 }
             }
         } catch (IOException e) {
