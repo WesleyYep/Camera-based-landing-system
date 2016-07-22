@@ -89,7 +89,7 @@ public class Sender {
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
 		msg.chan1_raw = mode.equals("ail") ? value : 0; //may need to change these
 		msg.chan2_raw = mode.equals("elev") ? value : 0;
-		msg.chan3_raw = mode.equals("thr") ? value : 0;
+		msg.chan3_raw = mode.equals("thro") ? value : 0;
 		msg.chan4_raw = mode.equals("rud") ? value : 0;
 		msg.chan5_raw = 65535; //UINT_16 max
 		msg.chan6_raw = 65535;
