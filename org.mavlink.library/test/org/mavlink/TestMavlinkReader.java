@@ -23,14 +23,10 @@
 package org.mavlink;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.PrintStream;
-import java.util.Scanner;
-
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
 import org.mavlink.messages.ja4rtor.msg_global_position_int;
@@ -56,11 +52,11 @@ public class TestMavlinkReader {
 	private static String direction = "";
 	private static float xVel, yVel = 0;
 	private static Sender sender;
-	private static double testValue = 0;
 	private static int channel1Mid = 0;
 	private static int channel2Mid = 0;
 	private static int channel3Mid = 0;
 	private static int channel4Mid = 0;
+	private static int testValue = 100;
 	
     /**
      * @param args
@@ -117,7 +113,7 @@ public class TestMavlinkReader {
 //				yVel = Integer.parseInt(arr[2]) / 100.0;
 			} else if (data.toString().startsWith("test:")) {
 				System.out.println("Setting test value to: " + arr[1]);
-				testValue = Double.parseDouble(arr[1]);
+				testValue = Integer.parseInt(arr[1]);
 			}
 		});
 	
@@ -204,23 +200,23 @@ public class TestMavlinkReader {
 			if (direction.equals("forward")) {
 				if (currentCustomMode == 9){ sender.land(0, 30); }
 				else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
-				else { sender.rc("elev", 2000); }
+				else { sender.rc("elev", 1500+testValue); }
 			} else if (direction.equals("backward")) {
 				if (currentCustomMode == 9){ sender.land(0, -30); }
 				else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
-				else { sender.rc("elev", 1000); }
+				else { sender.rc("elev", 1500-testValue); }
 			} else if (direction.equals("left")) {
 				if (currentCustomMode == 9){ sender.land(-30, 0); }
 				else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
-				else { sender.rc("ail", 1000); }
+				else { sender.rc("ail", 1500-testValue); }
 			} else if (direction.equals("right")) {
 				if (currentCustomMode == 9){ sender.land(30, 0); }
 				else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
-				else { sender.rc("ail", 2000); }
+				else { sender.rc("ail", 1500+testValue); }
 			} else if (direction.equals("centre")) {
 				if (currentCustomMode == 9){ sender.land(0, 0); }
 				else if (currentCustomMode == 4){ sender.command(0,0,0); }
-				else { sender.rc("thro", 1300); }
+				else { sender.rc("thro", 1000 + testValue); }
 			} else if (direction.equals("descend")) {
 				if (currentCustomMode == 9){ sender.land(0, 0); }
 				else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
