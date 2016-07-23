@@ -50,6 +50,8 @@ public class TestColourDetection {
         Mat imgThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat upperRedThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat hierarchy = new Mat();
+        double previousVariance = -1;
+        boolean isSmallPattern = false;
 
         try {
 			client.send("start");
@@ -72,12 +74,12 @@ public class TestColourDetection {
 	        Core.add(imgThresholded, upperRedThresholded, imgThresholded);
 	        
 	        //morphological opening (removes small objects from the foreground)
-	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
-	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
-	
-	        //morphological closing (removes small holes from the foreground)
-	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
-	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
+//	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
+//	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
+//	
+//	        //morphological closing (removes small holes from the foreground)
+//	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
+//	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
 	
 	        //send binary image here
 	        if (isStreaming && isBinary ) {
@@ -102,7 +104,7 @@ public class TestColourDetection {
 	        		double dM01 = moments.m01;
 	    	        double dM10 = moments.m10;
 	    	        double dArea = moments.m00;
-	    	        if (dArea > 500 && dArea < 20000) {
+	    	        if (dArea > 500/* && dArea < 20000*/) {
 	    	        	//calculate the position of the marker
 	    	        	int posX = (int) (dM10 / dArea);
 	    	        	int posY = (int) (dM01 / dArea);
@@ -139,6 +141,7 @@ public class TestColourDetection {
 	        		}
 	        	}
 	 //       	System.out.println("num: " + actualMarkers.size());
+       	
 	        	if (actualMarkers.size() > 3) {
 	        		TreeMap<Double, Point> distances = new TreeMap<Double, Point>();
 	        		for (int i = 0; i < actualMarkers.size(); i++) {
@@ -196,7 +199,8 @@ public class TestColourDetection {
                     double dist2 = distance(actualMarkers.get(0), actualMarkers.get(2));
                     double dist3 = distance(actualMarkers.get(1), actualMarkers.get(2));
                     double maxDistance = Math.max(Math.max(dist1,dist2), dist3);
-					double perceivedPixelLength = maxDistance;
+
+                    double perceivedPixelLength = maxDistance;
 			//		double actualSizeMetres = 0.194;
 			//		double f = (125.8 * 1.00)/actualSizeMetres; //(pixel * distance)/actual - testing shows it appears 110 pixels at distance = 1m (for A3 size)
 			//		double actualDistance = (actualSizeMetres * f) / perceivedPixelLength;
@@ -215,8 +219,14 @@ public class TestColourDetection {
                     	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
                     }
                     System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+                    if (!isSmallPattern &&previousVariance != -1 && varianceY/previousVariance < 0.2) {
+                    	isSmallPattern = true;
+                    } else if (isSmallPattern && varianceY/previousVariance > 5) {
+                    	isSmallPattern = false;
+                    }
+                    previousVariance = varianceY;
                     try {
-                    	double normalRatio = varianceY > 1000 ? 1.14 : 1.44; //based on current A3 landing pad
+                    	double normalRatio = !isSmallPattern ? 1.14 : 1.44; //based on current A3 landing pad
 	                    if (isLandingPadFlat) {
 	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || Math.abs(normalRatio - ratio) > 0.02) {
 	                    		client.send("flat:false");
@@ -241,7 +251,7 @@ public class TestColourDetection {
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
                     //double altitude = 0.1185 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
-                    double actualSizeMetres = varianceY > 1000 ? 0.099 : 0.020;
+                    double actualSizeMetres = !isSmallPattern ? 0.099 : 0.020;
                     double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     
                     //now find x and y offset

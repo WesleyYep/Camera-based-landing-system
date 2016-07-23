@@ -200,23 +200,23 @@ public class TestMavlinkReader {
 			if (direction.equals("forward")) {
 				if (currentCustomMode == 9){ sender.land(0, 30); }
 				else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
-				else { sender.rc("elev", 1500+testValue); }
+				else { sender.rc("elev", channel2Mid+testValue); }
 			} else if (direction.equals("backward")) {
 				if (currentCustomMode == 9){ sender.land(0, -30); }
 				else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
-				else { sender.rc("elev", 1500-testValue); }
+				else { sender.rc("elev", channel2Mid-testValue); }
 			} else if (direction.equals("left")) {
 				if (currentCustomMode == 9){ sender.land(-30, 0); }
 				else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
-				else { sender.rc("ail", 1500-testValue); }
+				else { sender.rc("ail", channel1Mid-testValue); }
 			} else if (direction.equals("right")) {
 				if (currentCustomMode == 9){ sender.land(30, 0); }
 				else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
-				else { sender.rc("ail", 1500+testValue); }
+				else { sender.rc("ail", channel1Mid+testValue); }
 			} else if (direction.equals("centre")) {
 				if (currentCustomMode == 9){ sender.land(0, 0); }
 				else if (currentCustomMode == 4){ sender.command(0,0,0); }
-				else { sender.rc("thro", 1000 + testValue); }
+				else { sender.rc("thro", channel3Mid + testValue); }
 			} else if (direction.equals("descend")) {
 				if (currentCustomMode == 9){ sender.land(0, 0); }
 				else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
@@ -297,12 +297,16 @@ public class TestMavlinkReader {
                 	currentMode = ((msg_heartbeat)msg).base_mode;
                 	currentCustomMode = ((msg_heartbeat)msg).custom_mode;
                 } else if (msg != null && msg.messageType == msg_rc_channels_raw.MAVLINK_MSG_ID_RC_CHANNELS_RAW) {
-                	System.out.println("got rc raw message!!!!!");
-                	nb++;
-                	channel1Mid = ((msg_rc_channels_raw)msg).chan1_raw;
-                	channel2Mid = ((msg_rc_channels_raw)msg).chan2_raw;
-                	channel3Mid = ((msg_rc_channels_raw)msg).chan3_raw;
-                	channel4Mid = ((msg_rc_channels_raw)msg).chan4_raw;
+                	if (((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan2_raw && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan3_raw
+                			 && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan4_raw  && ((msg_rc_channels_raw)msg).chan2_raw != ((msg_rc_channels_raw)msg).chan3_raw) {
+                		nb++;
+                		channel1Mid = ((msg_rc_channels_raw)msg).chan1_raw;
+                		channel2Mid = ((msg_rc_channels_raw)msg).chan2_raw;
+                		channel3Mid = ((msg_rc_channels_raw)msg).chan3_raw;
+                		channel4Mid = ((msg_rc_channels_raw)msg).chan4_raw;
+                		sender.send(-3);
+                		System.out.println("got rc raw message!!!!! " + channel1Mid + " " + channel2Mid + " " + channel3Mid + " " + channel4Mid);
+                	}
                 }
             }
         } catch (IOException e) {
