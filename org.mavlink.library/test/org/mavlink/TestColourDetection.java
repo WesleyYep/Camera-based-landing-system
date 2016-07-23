@@ -25,6 +25,8 @@ public class TestColourDetection {
     public static double hMin, hMax, sMin, sMax, vMin, vMax;
     private static boolean isLandingPadFlat = false;
 	private static boolean isBinary = false;
+	public static double xOffsetValue = -99999;
+	public static double yOffsetValue = -99999;
     
     public static void start() {
 		Client streamClient = new Client("169.254.110.196", 55556, null);
@@ -250,13 +252,14 @@ public class TestColourDetection {
                     double thetaY = pitch + betaY;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
-                    //double altitude = 0.1185 / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     double actualSizeMetres = !isSmallPattern ? 0.099 : 0.020;
                     double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     
                     //now find x and y offset
                     double xOffset = altitude * Math.tan(thetaX);
                     double yOffset = altitude * Math.tan(thetaY);
+                    xOffsetValue = xOffset;
+                    yOffsetValue = yOffset;
                     
                     //send
 	        		try {

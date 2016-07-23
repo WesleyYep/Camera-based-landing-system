@@ -57,6 +57,7 @@ public class TestMavlinkReader {
 	private static int channel3Mid = 0;
 	private static int channel4Mid = 0;
 	private static int testValue = 100;
+	private static boolean testMode = false;
 	
     /**
      * @param args
@@ -112,6 +113,9 @@ public class TestMavlinkReader {
 //				xVel = Integer.parseInt(arr[1]) / 100.0;
 //				yVel = Integer.parseInt(arr[2]) / 100.0;
 			} else if (data.toString().startsWith("test:")) {
+				if (arr[1].equals("test")) {
+					testMode = Boolean.parseBoolean(arr[2]);
+				}
 				System.out.println("Setting test value to: " + arr[1]);
 				testValue = Integer.parseInt(arr[1]);
 			}
@@ -196,31 +200,41 @@ public class TestMavlinkReader {
 		
     	while (true) {
 			sender.heartbeat();
-//			sender.command(xVel, yVel, 0);
-			if (direction.equals("forward")) {
-				if (currentCustomMode == 9){ sender.land(0, 30); }
-				else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
-				else { sender.rc("elev", channel2Mid+testValue); }
-			} else if (direction.equals("backward")) {
-				if (currentCustomMode == 9){ sender.land(0, -30); }
-				else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
-				else { sender.rc("elev", channel2Mid-testValue); }
-			} else if (direction.equals("left")) {
-				if (currentCustomMode == 9){ sender.land(-30, 0); }
-				else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
-				else { sender.rc("ail", channel1Mid-testValue); }
-			} else if (direction.equals("right")) {
-				if (currentCustomMode == 9){ sender.land(30, 0); }
-				else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
-				else { sender.rc("ail", channel1Mid+testValue); }
-			} else if (direction.equals("centre")) {
-				if (currentCustomMode == 9){ sender.land(0, 0); }
-				else if (currentCustomMode == 4){ sender.command(0,0,0); }
-				else { sender.rc("thro", channel3Mid + testValue); }
-			} else if (direction.equals("descend")) {
-				if (currentCustomMode == 9){ sender.land(0, 0); }
-				else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
-				else { sender.rc("none", 1000); }
+			
+			if (testMode && TestColourDetection.xOffsetValue != -99999 && TestColourDetection.yOffsetValue != -99999) {
+				if (currentMode == 209) { //stabilize, alt_hold or land + ARMED mode
+					//may need to reverse orientation after testing
+					int xDirection = TestColourDetection.xOffsetValue > 0 ? channel1Mid-testValue : channel1Mid+testValue;
+					int yDirection = TestColourDetection.yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
+					sender.rc(yDirection, xDirection, 0, 0);
+				}
+				
+			} else {
+				if (direction.equals("forward")) {
+					if (currentCustomMode == 9){ sender.land(0, 30); }
+					else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
+					else { sender.rc(0, channel2Mid+testValue, 0, 0); } //	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
+				} else if (direction.equals("backward")) {
+					if (currentCustomMode == 9){ sender.land(0, -30); }
+					else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
+					else { sender.rc(0, channel2Mid-testValue, 0, 0); } // elevator only (controls pitch)
+				} else if (direction.equals("left")) {
+					if (currentCustomMode == 9){ sender.land(-30, 0); }
+					else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
+					else { sender.rc(channel1Mid-testValue, 0, 0, 0); } //aileron only (controls roll)
+				} else if (direction.equals("right")) {
+					if (currentCustomMode == 9){ sender.land(30, 0); }
+					else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
+					else { sender.rc(channel1Mid+testValue, 0, 0, 0); }
+				} else if (direction.equals("centre")) {
+					if (currentCustomMode == 9){ sender.land(0, 0); }
+					else if (currentCustomMode == 4){ sender.command(0,0,0); }
+					else { sender.rc(0, 0, channel3Mid + testValue, 0); } // throttle only
+				} else if (direction.equals("descend")) {
+					if (currentCustomMode == 9){ sender.land(0, 0); }
+					else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
+					else { sender.rc(0, 0, 0, 0); } //cancel all
+				}
 			}
 			try {
 				Thread.sleep(1000);

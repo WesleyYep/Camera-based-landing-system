@@ -82,15 +82,24 @@ public class Sender {
 		return false;
 	}
 	
-	public boolean rc(String mode, int value) {
-		System.out.println("sending rc message: value=" + value);
+	/**
+	 * Set parameters to 0 to release control back to the RC
+	 * 
+	 * @param aileronValue
+	 * @param elevatorValue
+	 * @param throttleValue
+	 * @param rudderValue
+	 * @return
+	 */
+	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
+		System.out.println("sending rc message: value=" + aileronValue + "," + elevatorValue + "," + throttleValue + "," + rudderValue);
 	    msg_rc_channels_override msg = new msg_rc_channels_override(255, 1);
 		msg.target_system = 1;
 		msg.target_component = (byte) MAV_COMPONENT.MAV_COMP_ID_ALL;
-		msg.chan1_raw = mode.equals("ail") ? value : 0; //may need to change these
-		msg.chan2_raw = mode.equals("elev") ? value : 0;
-		msg.chan3_raw = mode.equals("thro") ? value : 0;
-		msg.chan4_raw = mode.equals("rud") ? value : 0;
+		msg.chan1_raw = aileronValue;
+		msg.chan2_raw = elevatorValue;
+		msg.chan3_raw = throttleValue;
+		msg.chan4_raw = rudderValue;
 		msg.chan5_raw = 65535; //UINT_16 max
 		msg.chan6_raw = 65535;
 		msg.chan7_raw = 65535;

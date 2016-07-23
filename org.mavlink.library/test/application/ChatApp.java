@@ -51,7 +51,7 @@ public class ChatApp extends Application {
 	private HBox topMenu;
 	private HBox botMenu;
 	private Pane display;
-	private Polygon landingPad;
+	private Polygon landingArrow;
 	private NetworkConnection connection = createServer();
 	private Label distanceText = new Label("Total distance: ");
 	private Label altitudeText = new Label("Altitude: ");
@@ -228,9 +228,9 @@ public class ChatApp extends Application {
 				guidedModeButton, altHoldModeButton);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
-		landingPad = new Polygon(172, 128, 212, 128, 192, 78);
-		landingPad.setFill(Color.RED);
-		display = new Pane(landingPad, /* distanceText, */ altitudeText, positionText, landLabel, sliderBox);
+		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);
+		landingArrow.setFill(Color.RED);
+		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, sliderBox);
 		altitudeText.setTranslateY(20);
 		positionText.setTranslateY(40);
 		distanceText.setFont(new Font("Serif", 18));
@@ -369,14 +369,9 @@ public class ChatApp extends Application {
 					// joystick.setVisible(true);
 				} else if (data.toString().startsWith("pos:")) {
 					// pos:x:y
-					double x = Double.parseDouble(arr[1]) * -1; // appears
-																// reversed
+					double x = Double.parseDouble(arr[1]) * -1; 
 					double y = Double.parseDouble(arr[2]);
-					landingPad.setRotate(Math.toDegrees(Math.atan2(-x, -y))); // swap
-																				// due
-																				// to
-																				// camera
-																				// orientation
+					landingArrow.setRotate(Math.toDegrees(Math.atan2(-x, -y))); 
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 				} else if (data.toString().startsWith("dist:")) {
 					// distanceText.setText(String.format("Total Distance:
