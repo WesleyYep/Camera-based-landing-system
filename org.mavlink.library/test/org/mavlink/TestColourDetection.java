@@ -220,7 +220,7 @@ public class TestColourDetection {
                     	angle = angleBetween(actualMarkers.get(0), actualMarkers.get(1), actualMarkers.get(2));                    	
                     	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
                     }
-                    System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
+         //           System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
                     if (!isSmallPattern &&previousVariance != -1 && varianceY/previousVariance < 0.2) {
                     	isSmallPattern = true;
                     } else if (isSmallPattern && varianceY/previousVariance > 5) {

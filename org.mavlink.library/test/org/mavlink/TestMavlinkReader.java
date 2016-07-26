@@ -57,7 +57,8 @@ public class TestMavlinkReader {
 	private static int channel3Mid = 0;
 	private static int channel4Mid = 0;
 	private static int testValue = 100;
-	private static boolean testMode = false;
+//	private static boolean testMode = false;
+	private static boolean testMode = true;
 	
     /**
      * @param args
@@ -172,7 +173,7 @@ public class TestMavlinkReader {
     	
 		t.start();
 		t2.start();
-    	t3.start();
+		t3.start();
     }
     
     private static void testGuidedCommand() {
@@ -204,7 +205,7 @@ public class TestMavlinkReader {
 			if (testMode && TestColourDetection.xOffsetValue != -99999 && TestColourDetection.yOffsetValue != -99999) {
 				if (currentMode == 209) { //stabilize, alt_hold or land + ARMED mode
 					//may need to reverse orientation after testing
-					int xDirection = TestColourDetection.xOffsetValue > 0 ? channel1Mid-testValue : channel1Mid+testValue;
+					int xDirection = TestColourDetection.xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
 					int yDirection = TestColourDetection.yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
 					sender.rc(yDirection, xDirection, 0, 0);
 				}
