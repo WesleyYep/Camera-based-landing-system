@@ -1,4 +1,4 @@
-package org.mavlink;
+package serial;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package application;
+package groundstation;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -14,8 +14,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
-import org.mavlink.NetworkConnection;
+import network.NetworkConnection;
 
 public class Joystick extends JFrame {
 

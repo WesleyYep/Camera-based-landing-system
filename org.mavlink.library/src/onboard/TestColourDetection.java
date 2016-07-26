@@ -1,13 +1,17 @@
-package org.mavlink;
+package onboard;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import org.mavlink.TestMavlinkReader;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
+
+import network.Client;
 
 /**
  * Created by Wesley on 24/04/2016.

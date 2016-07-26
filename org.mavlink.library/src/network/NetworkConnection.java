@@ -1,4 +1,4 @@
-package org.mavlink;
+package network;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

@@ -1,4 +1,4 @@
-package org.mavlink;
+package serial;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;

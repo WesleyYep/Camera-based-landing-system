@@ -1,18 +1,17 @@
-package application;
+package groundstation;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import org.controlsfx.control.RangeSlider;
-import org.mavlink.NetworkConnection;
-import org.mavlink.Server;
-import org.mavlink.StreamServer;
 import org.opencv.core.Core;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
+import network.NetworkConnection;
+import network.Server;
+import network.StreamServer;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

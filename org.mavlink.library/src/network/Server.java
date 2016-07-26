@@ -1,10 +1,9 @@
-package org.mavlink;
+package network;
 
 import java.io.Serializable;
 import java.util.function.Consumer;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -17,25 +16,24 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Client extends NetworkConnection {
-
-	private String ip;
+public class Server extends NetworkConnection {
+	
 	private int port;
 	
-	public Client(String ip, int port, Consumer<Serializable> onReceiveCallback){
+	public Server(int port, Consumer<Serializable> onReceiveCallback){
 		super(onReceiveCallback);
-		this.ip = ip;
 		this.port = port;
 	}
+
 	
 	@Override
-	protected boolean isServer(){		
-		return false;
+	protected boolean isServer(){
+		return true;
 	}
 	
 	@Override
 	protected String getIP(){
-		return ip;
+		return null;
 	}
 	
 	@Override
@@ -47,23 +45,4 @@ public class Client extends NetworkConnection {
 	protected boolean isStreamingServer() {
 		return false;
 	}
-	
-//	
-//	public static void main(String[] args) throws Exception {
-//		Client client = new Client("127.0.0.1", 55555, data ->{
-//			System.out.println(data.toString());
-//		});
-//		client.startConnection();
-//
-//		while (true) {
-//			Thread.sleep(5000);
-//			try{
-//				client.send("Air station response");
-//				client.send("pos:210.11:70.98");
-//			}catch (Exception e){
-//				System.out.println("failed");
-//			}
-//		}
-//	}
-	
 }

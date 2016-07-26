@@ -1,8 +1,11 @@
-package org.mavlink;
+package onboard;
+import org.mavlink.TestMavlinkReader;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
+
+import network.Client;
 
 import java.util.ArrayList;
 import java.util.List;

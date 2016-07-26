@@ -20,20 +20,22 @@
  * ====================================================================
  */
 
-package org.mavlink;
+package onboard;
 
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
-import java.io.PrintStream;
+import org.mavlink.MAVLinkReader;
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
 import org.mavlink.messages.ja4rtor.msg_global_position_int;
 import org.mavlink.messages.ja4rtor.msg_heartbeat;
 import org.mavlink.messages.ja4rtor.msg_rc_channels_raw;
-
 import jssc.SerialPortList;
+import network.Client;
+import serial.Reader;
+import serial.Sender;
+import serial.SerialPortCommunicator;
 
 /**
  * @author ghelle
@@ -50,7 +52,6 @@ public class TestMavlinkReader {
 	public static double currentMode = 0;
 	public static double currentCustomMode = 0;
 	private static String direction = "";
-	private static float xVel, yVel = 0;
 	private static Sender sender;
 	private static int channel1Mid = 0;
 	private static int channel2Mid = 0;
@@ -111,8 +112,6 @@ public class TestMavlinkReader {
 				land(sender, arr[1]); //eg. land:10
 			} else if (data.toString().startsWith("command:")) {
 				direction = arr[1];
-//				xVel = Integer.parseInt(arr[1]) / 100.0;
-//				yVel = Integer.parseInt(arr[2]) / 100.0;
 			} else if (data.toString().startsWith("test:")) {
 				if (arr[1].equals("test")) {
 					testMode = Boolean.parseBoolean(arr[2]);
@@ -176,29 +175,12 @@ public class TestMavlinkReader {
 		t3.start();
     }
     
-    private static void testGuidedCommand() {
-    	while (true) {
-    		sender.heartbeat();
-    		sender.command(0, 0, testValue);
-    		System.out.println("TEST MODE ONLY!!!!!");
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {}
-    	}
-    }
-    
     public static void changeMode(String mode, boolean armed) {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
 
 	private static void command(Sender sender) {
-		//testing purposes
-//		boolean test = true;
-//		if (test) {
-//			testGuidedCommand();
-//		}
-		
     	while (true) {
 			sender.heartbeat();
 			
@@ -346,11 +328,9 @@ public class TestMavlinkReader {
     	}    	
     }
     
-    static public void testFromSerial(SerialPortCommunicator spc) {
+    public static void testFromSerial(SerialPortCommunicator spc) {
         MAVLinkReader reader;
-  //      String fileOut = filename + "-resultat.out";
         int nb = 0;
-  //          System.setOut(new PrintStream(fileOut));
     	Reader rdr = new Reader(spc);
     	PipedInputStream in = rdr.read();
         DataInputStream dis = new DataInputStream(in);
@@ -372,84 +352,5 @@ public class TestMavlinkReader {
                           + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
     }
 
-    static public void testFile(String filename) {
-        MAVLinkReader reader;
-        String fileOut = filename + "-resultat.out";
-        int nb = 0;
-        try {
-            System.setOut(new PrintStream(fileOut));
-            DataInputStream dis = new DataInputStream(new FileInputStream(filename));
-            reader = new MAVLinkReader(dis);
-            while (dis.available() > 0) {
-                MAVLinkMessage msg = reader.getNextMessage();
-                //MAVLinkMessage msg = reader.getNextMessageWithoutBlocking();
-                if (msg != null) {
-                    nb++;
-                    System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
-                }
-            }
-            dis.close();
-
-            System.out.println("TOTAL BYTES = " + reader.getTotalBytesReceived());
-            System.out.println("NBMSG (" + nb + ") : " + reader.getNbMessagesReceived() + " NBCRC=" + reader.getBadCRC() + " NBSEQ="
-                               + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
-        }
-        catch (Exception e) {
-            System.out.println("ERROR : " + e);
-        }
-    }
-
-    static public void testBuffer(String filename) {
-        MAVLinkReader reader;
-        String fileOut = filename + "-resultat-buffer.out";
-        int nb = 0;
-        int sizeToRead = 4096;
-        int available;
-        byte[] buffer = new byte[4096];
-        MAVLinkMessage msg;
-        try {
-            System.setOut(new PrintStream(fileOut));
-            DataInputStream dis = new DataInputStream(new FileInputStream(filename));
-            reader = new MAVLinkReader();
-            while (dis.available() > 0) {
-                msg = reader.getNextMessage(buffer, 0);
-                if (msg != null) {
-                    nb++;
-                    System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
-                }
-                else {
-                    if (dis.available() > 0) {
-                        available = dis.available();
-                        if (available > sizeToRead) {
-                            available = sizeToRead;
-                        }
-                        dis.read(buffer, 0, available);
-                        msg = reader.getNextMessage(buffer, available);
-                        if (msg != null) {
-                            nb++;
-                            System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
-                        }
-                    }
-                }
-            }
-            do {
-                msg = reader.getNextMessage(buffer, 0);
-                if (msg != null) {
-                    nb++;
-                    System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
-                }
-            }
-            while (msg != null);
-            dis.close();
-
-            System.out.println("TOTAL BYTES = " + reader.getTotalBytesReceived());
-            System.out.println("NBMSG (" + nb + ") : " + reader.getNbMessagesReceived() + " NBCRC=" + reader.getBadCRC() + " NBSEQ="
-                               + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
-        }
-        catch (Exception e) {
-            System.out.println("ERROR : " + e);
-            e.printStackTrace();
-        }
-
-    }
+    
 }
