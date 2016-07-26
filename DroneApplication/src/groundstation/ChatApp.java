@@ -1,7 +1,5 @@
 package groundstation;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 import org.controlsfx.control.RangeSlider;
 import org.opencv.core.Core;
 import javafx.application.Application;
