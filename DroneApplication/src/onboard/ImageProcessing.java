@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
-import org.mavlink.TestMavlinkReader;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
@@ -16,23 +14,29 @@ import network.Client;
 /**
  * Created by Wesley on 24/04/2016.
  */
-public class TestColourDetection {
+public class ImageProcessing {
 
     static {
         // Load the native OpenCV library
         System.out.println(System.getProperty("java.library.path"));
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     }
-    public static Client client;
-    public static boolean isStreaming = false;
-//    private static boolean isBinary = false;
-    public static double hMin, hMax, sMin, sMax, vMin, vMax;
-    private static boolean isLandingPadFlat = false;
-	private static boolean isBinary = false;
-	public static double xOffsetValue = -99999;
-	public static double yOffsetValue = -99999;
+    public Client client;
+    public boolean isStreaming = false;
+    public double hMin, hMax, sMin, sMax, vMin, vMax;
+    private boolean isLandingPadFlat = false;
+	private boolean isBinary = false;
+	public double xOffsetValue = -99999;
+	public double yOffsetValue = -99999;
+	public Drone drone;
+	public DroneApplication droneApplication;
+	
+	public ImageProcessing(Drone drone, DroneApplication app) {
+		this.drone = drone;
+		this.droneApplication = app;
+	}
     
-    public static void start() {
+    public void start() {
 		Client streamClient = new Client("169.254.110.196", 55556, null);
 		try {
 			client.startConnection();
@@ -192,8 +196,8 @@ public class TestColourDetection {
 //                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
                     double aovHorizontal = Math.toRadians(39); //39
                     double aovVertical = Math.toRadians(22);   //22
-                    double pitch = TestMavlinkReader.pitch;// Math.toRadians(0);
-                    double roll = TestMavlinkReader.roll;// Math.toRadians(0);
+                    double pitch = drone.pitch;// Math.toRadians(0);
+                    double roll = drone.roll;// Math.toRadians(0);
 //                    double actualX, actualY;
 //                    double h = 30; //in m
 //                    actualX = h * Math.tan(roll) - (-relativeX/width)*h*(Math.tan(roll+aovHorizontal) - Math.tan(roll-aovHorizontal)); // in m
@@ -286,7 +290,7 @@ public class TestColourDetection {
 				}
 	        }
 			try {
-				client.send("mode:" + TestMavlinkReader.currentMode + ":" + TestMavlinkReader.currentCustomMode);
+				client.send("mode:" + drone.currentMode + ":" + drone.currentCustomMode);
 			} catch (Exception e) {
 				failure(e);
 			}
@@ -295,24 +299,24 @@ public class TestColourDetection {
 	    return;
 	}
     
-    private static void failure(Exception e) {
+    private void failure(Exception e) {
     	e.printStackTrace();
     	//switch to stabilize
     	System.out.println("connection lost! Switching to stabilize mode");
-    	TestMavlinkReader.changeMode("stabilize", true);
+    	droneApplication.changeMode("stabilize", true);
     	System.exit(-1);
     }
     
-    private static double angleBetween(Point center, Point current, Point previous) {
+    private double angleBetween(Point center, Point current, Point previous) {
     	return Math.toDegrees(Math.atan2(current.x - center.x,current.y - center.y)-
                 Math.atan2(previous.x- center.x,previous.y- center.y));
 	}
 
-	private static double squared(double value) {
+	private double squared(double value) {
 		return Math.pow(value, 2);
 	}
 
-	private static double distance(Point point, Point point2) {
+	private double distance(Point point, Point point2) {
 		return Math.sqrt(Math.pow(point.x-point2.x, 2) + Math.pow(point.y-point2.y, 2));
 	}
    

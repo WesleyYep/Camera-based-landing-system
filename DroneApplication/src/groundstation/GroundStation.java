@@ -36,7 +36,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Font;
 
-public class ChatApp extends Application {
+public class GroundStation extends Application {
 
 	private TextArea messages = new TextArea();
 	private TextField input = new TextField();
@@ -344,7 +344,7 @@ public class ChatApp extends Application {
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				StreamServer streamServer = new StreamServer(55556, ChatApp.this);
+				StreamServer streamServer = new StreamServer(55556, GroundStation.this);
 				try {
 					streamServer.startConnection();
 					streamServer.receiveBytes();

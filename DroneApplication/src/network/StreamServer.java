@@ -5,16 +5,16 @@ import java.awt.image.DataBufferByte;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import groundstation.ChatApp;
+import groundstation.GroundStation;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.WritableImage;
 
 public class StreamServer extends NetworkConnection {
 	
 	private int port;
-	private ChatApp ca;
+	private GroundStation ca;
 	
-	public StreamServer(int port, ChatApp ca){
+	public StreamServer(int port, GroundStation ca){
 		super(null);
 		this.port = port;
 		this.ca = ca;

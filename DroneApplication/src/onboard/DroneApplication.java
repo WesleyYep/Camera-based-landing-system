@@ -38,33 +38,37 @@ import serial.Sender;
 import serial.SerialPortCommunicator;
 
 /**
- * @author ghelle
- * @version $Rev: 10 $
+ * This runs onboard the drone
+ * It creates the threads for reading the HKPilot through UART serial cable, communication with the ground
+ * station via Wifi, and for the image processing algorithm
  *
  */
-public class TestMavlinkReader {
-
-	public static float pitch = 0;
-	public static float roll = 0;
-	public static float yaw = 0;
-	private static float initialAltitude = 0;
-	public static float altitude = 0;
-	public static double currentMode = 0;
-	public static double currentCustomMode = 0;
-	private static String direction = "";
-	private static Sender sender;
-	private static int channel1Mid = 0;
-	private static int channel2Mid = 0;
-	private static int channel3Mid = 0;
-	private static int channel4Mid = 0;
-	private static int testValue = 100;
+public class DroneApplication {
+	public Drone drone = new Drone(); //represents drone properties eg. yaw, roll, pitch
+	private String direction = "";
+	private Sender sender;
+	private int channel1Mid = 0;
+	private int channel2Mid = 0;
+	private int channel3Mid = 0;
+	private int channel4Mid = 0;
+	private int testValue = 100; // the offset for the rc override messages
+	private String ipAddress = "169.254.110.196";
 //	private static boolean testMode = false;
-	private static boolean testMode = true;
+	private boolean testMode = true;
 	
     /**
-     * @param args
+     * Entry point of onboard drone application
      */
     public static void main(String[] args) {
+    	DroneApplication application = new DroneApplication();
+    	application.start(args);
+    }
+    
+    /**
+     * Start processing
+     * @param args - the command line arguments given for testing certain features
+     */
+    public void start(String[] args) {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
 		sender = new Sender(spc);
     	try {
@@ -80,29 +84,24 @@ public class TestMavlinkReader {
     		System.err.println("No ports available");
     	}
 //    	
-		Thread t3 = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				//start move message sending
-				command(sender);
-			}
-		});
+	
+		ImageProcessing imageProcessing = new ImageProcessing(drone, this);
 		
-    	TestColourDetection.client = new Client("169.254.110.196", 55555, data ->{
+		imageProcessing.client = new Client(ipAddress, 55555, data ->{
 			System.out.println(data.toString());		
 			String[] arr = data.toString().split(":");
 			if (data.toString().startsWith("stream:")) {
-				TestColourDetection.isStreaming = arr[1].equals("true");
+				imageProcessing.isStreaming = arr[1].equals("true");
 			} else if (data.toString().startsWith("slider:")) {
 				if (arr[1].equals("h")) {
-					TestColourDetection.hMin = Double.parseDouble(arr[2]);
-					TestColourDetection.hMax = Double.parseDouble(arr[3]);
+					imageProcessing.hMin = Double.parseDouble(arr[2]);
+					imageProcessing.hMax = Double.parseDouble(arr[3]);
 				} else if (arr[1].equals("s")) {
-					TestColourDetection.sMin = Double.parseDouble(arr[2]);
-					TestColourDetection.sMax = Double.parseDouble(arr[3]);
+					imageProcessing.sMin = Double.parseDouble(arr[2]);
+					imageProcessing.sMax = Double.parseDouble(arr[3]);
 				} else if (arr[1].equals("v")) {
-					TestColourDetection.vMin = Double.parseDouble(arr[2]);
-					TestColourDetection.vMax = Double.parseDouble(arr[3]);
+					imageProcessing.vMin = Double.parseDouble(arr[2]);
+					imageProcessing.vMax = Double.parseDouble(arr[3]);
 				}
 			} else if (data.toString().startsWith("arm:")) {
 				testArm(sender, arr[1].equals("true"));	
@@ -122,18 +121,19 @@ public class TestMavlinkReader {
 		});
 	
     	//start camera for QR detection
-    	Thread t = new Thread(new Runnable(){
+    	Thread imageProcessingThread = new Thread(new Runnable(){
 			@Override
 			public void run() {
 				try {
-					TestColourDetection.start();
+					imageProcessing.start();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
     	});
     	
-    	Thread t2 = new Thread(new Runnable() {
+    	//thread that deals with sending and receiving mavlink messages
+    	Thread mavlinkThread = new Thread(new Runnable() {
     		@Override
 			public void run() {
 				String cmd = "";
@@ -170,52 +170,60 @@ public class TestMavlinkReader {
     		}
     	});
     	
-		t.start();
-		t2.start();
-		t3.start();
+		Thread moveCommandThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				//start move message sending
+				command(sender, imageProcessing);
+			}
+		});
+    	
+		imageProcessingThread.start();
+		mavlinkThread.start();
+		moveCommandThread.start();
     }
     
-    public static void changeMode(String mode, boolean armed) {
+    public void changeMode(String mode, boolean armed) {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
 
-	private static void command(Sender sender) {
+	private void command(Sender sender, ImageProcessing imageProcessing) {
     	while (true) {
 			sender.heartbeat();
 			
-			if (testMode && TestColourDetection.xOffsetValue != -99999 && TestColourDetection.yOffsetValue != -99999) {
-				if (currentMode == 209) { //stabilize, alt_hold or land + ARMED mode
+			if (testMode && imageProcessing.xOffsetValue != -99999 && imageProcessing.yOffsetValue != -99999) {
+				if (drone.currentMode == 209) { //stabilize, alt_hold or land + ARMED mode
 					//may need to reverse orientation after testing
-					int xDirection = TestColourDetection.xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
-					int yDirection = TestColourDetection.yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
+					int xDirection = imageProcessing.xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
+					int yDirection = imageProcessing.yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
 					sender.rc(yDirection, xDirection, 0, 0);
 				}
 				
 			} else {
 				if (direction.equals("forward")) {
-					if (currentCustomMode == 9){ sender.land(0, 30); }
-					else if (currentCustomMode == 4){ sender.command(0, 0.5, 0); }
+					if (drone.currentCustomMode == 9){ sender.land(0, 30); }
+					else if (drone.currentCustomMode == 4){ sender.command(0, 0.5, 0); }
 					else { sender.rc(0, channel2Mid+testValue, 0, 0); } //	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
 				} else if (direction.equals("backward")) {
-					if (currentCustomMode == 9){ sender.land(0, -30); }
-					else if (currentCustomMode == 4){ sender.command(0, -0.5, 0); }
+					if (drone.currentCustomMode == 9){ sender.land(0, -30); }
+					else if (drone.currentCustomMode == 4){ sender.command(0, -0.5, 0); }
 					else { sender.rc(0, channel2Mid-testValue, 0, 0); } // elevator only (controls pitch)
 				} else if (direction.equals("left")) {
-					if (currentCustomMode == 9){ sender.land(-30, 0); }
-					else if (currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
+					if (drone.currentCustomMode == 9){ sender.land(-30, 0); }
+					else if (drone.currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
 					else { sender.rc(channel1Mid-testValue, 0, 0, 0); } //aileron only (controls roll)
 				} else if (direction.equals("right")) {
-					if (currentCustomMode == 9){ sender.land(30, 0); }
-					else if (currentCustomMode == 4){ sender.command(0.5, 0, 0); }
+					if (drone.currentCustomMode == 9){ sender.land(30, 0); }
+					else if (drone.currentCustomMode == 4){ sender.command(0.5, 0, 0); }
 					else { sender.rc(channel1Mid+testValue, 0, 0, 0); }
 				} else if (direction.equals("centre")) {
-					if (currentCustomMode == 9){ sender.land(0, 0); }
-					else if (currentCustomMode == 4){ sender.command(0,0,0); }
+					if (drone.currentCustomMode == 9){ sender.land(0, 0); }
+					else if (drone.currentCustomMode == 4){ sender.command(0,0,0); }
 					else { sender.rc(0, 0, channel3Mid + testValue, 0); } // throttle only
 				} else if (direction.equals("descend")) {
-					if (currentCustomMode == 9){ sender.land(0, 0); }
-					else if (currentCustomMode == 4){ sender.command(0,0,0.5); }
+					if (drone.currentCustomMode == 9){ sender.land(0, 0); }
+					else if (drone.currentCustomMode == 4){ sender.command(0,0,0.5); }
 					else { sender.rc(0, 0, 0, 0); } //cancel all
 				}
 			}
@@ -225,7 +233,7 @@ public class TestMavlinkReader {
 		}
 	}   
     
-    private static void land(Sender sender, String degreesString) {
+    private void land(Sender sender, String degreesString) {
     	while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
@@ -237,13 +245,13 @@ public class TestMavlinkReader {
 		}
 	}    
     
-	private static void testHeartBeat(Sender sender) {
+	private void testHeartBeat(Sender sender) {
 		if(sender.heartbeat()) {
     		System.out.println("Successfully set heartbeat");
     	}
 	}
     
-    private static void testCommands(Sender sender,/* int value*/ int x, int y, int z) {
+    private void testCommands(Sender sender,/* int value*/ int x, int y, int z) {
 		while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
@@ -257,7 +265,7 @@ public class TestMavlinkReader {
 		}
     }
       
-    private static void testAngle(Sender sender, SerialPortCommunicator spc) {
+    private void testAngle(Sender sender, SerialPortCommunicator spc) {
     	sender.send(0); //stops all streams
     	sender.send(3); //rc raw values
 		sender.send(6); // barometer for altitude
@@ -280,19 +288,19 @@ public class TestMavlinkReader {
                 if (msg != null && msg.messageType == msg_ahrs2.MAVLINK_MSG_ID_AHRS2) {
                     nb++;
                     //System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
-                    pitch = ((msg_ahrs2)msg).pitch;
-                    yaw = ((msg_ahrs2)msg).yaw;
-                    roll = -((msg_ahrs2)msg).roll;
+                    drone.pitch = ((msg_ahrs2)msg).pitch;
+                    drone.yaw = ((msg_ahrs2)msg).yaw;
+                    drone.roll = -((msg_ahrs2)msg).roll;
           //          System.out.println("pitch=" + pitch + " - roll="+roll + " - yaw=" +yaw);
-                } else if (msg != null && msg.messageType == msg_global_position_int.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
+                /*} else if (msg != null && msg.messageType == msg_global_position_int.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
                     nb++;
-                	altitude = ((msg_global_position_int)msg).alt - initialAltitude;
-          //      	System.out.println("altitude=" + altitude);
+                    drone.altitude = ((msg_global_position_int)msg).alt - drone.initialAltitude;
+          //      	System.out.println("altitude=" + altitude); */
                 } else if (msg != null && msg.messageType == msg_heartbeat.MAVLINK_MSG_ID_HEARTBEAT) {
           //      	System.out.println("got heartbeat message!!!!!");
                 	nb++;
-                	currentMode = ((msg_heartbeat)msg).base_mode;
-                	currentCustomMode = ((msg_heartbeat)msg).custom_mode;
+                	drone.currentMode = ((msg_heartbeat)msg).base_mode;
+                	drone.currentCustomMode = ((msg_heartbeat)msg).custom_mode;
                 } else if (msg != null && msg.messageType == msg_rc_channels_raw.MAVLINK_MSG_ID_RC_CHANNELS_RAW) {
                 	if (((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan2_raw && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan3_raw
                 			 && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan4_raw  && ((msg_rc_channels_raw)msg).chan2_raw != ((msg_rc_channels_raw)msg).chan3_raw) {
@@ -315,20 +323,20 @@ public class TestMavlinkReader {
                           + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
 	}
 
-	public static void testArm(Sender sender, boolean arm) {
+	public void testArm(Sender sender, boolean arm) {
 		sender.heartbeat();
     	if(sender.arm(arm)) {
     		System.out.println("Successfully set ARMED to: " + arm);
     	}
     }
     
-    public static void testSendToSerial(Sender sender, int streamId) {
+    public void testSendToSerial(Sender sender, int streamId) {
     	if(sender.send(streamId)) {
     		System.out.println("sent successfully");
     	}    	
     }
     
-    public static void testFromSerial(SerialPortCommunicator spc) {
+    public void testFromSerial(SerialPortCommunicator spc) {
         MAVLinkReader reader;
         int nb = 0;
     	Reader rdr = new Reader(spc);
