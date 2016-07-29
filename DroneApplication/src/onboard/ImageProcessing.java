@@ -26,8 +26,6 @@ public class ImageProcessing {
     public double hMin, hMax, sMin, sMax, vMin, vMax;
     private boolean isLandingPadFlat = false;
 	private boolean isBinary = false;
-	public double xOffsetValue = -99999;
-	public double yOffsetValue = -99999;
 	public Drone drone;
 	public DroneApplication droneApplication;
 	
@@ -266,8 +264,7 @@ public class ImageProcessing {
                     //now find x and y offset
                     double xOffset = altitude * Math.tan(thetaX);
                     double yOffset = altitude * Math.tan(thetaY);
-                    xOffsetValue = xOffset;
-                    yOffsetValue = yOffset;
+                    droneApplication.command(xOffset, yOffset);
                     
                     //send
 	        		try {

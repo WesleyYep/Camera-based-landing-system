@@ -53,7 +53,8 @@ public class DroneApplication {
 	private int channel4Mid = 0;
 	private int testValue = 75; // the offset for the rc override messages
 	private String ipAddress = "169.254.110.196";
-	private static boolean testMode = false;
+	private long lastChangeTime = 0;
+	private boolean testMode = false;
 //	private boolean testMode = true;
 	
     /**
@@ -119,9 +120,9 @@ public class DroneApplication {
 					sender.rc(channel1Mid-testValue, 0, 0, 0);//aileron only (controls roll)
 				} else if (direction.equals("right")) {
 					sender.rc(channel1Mid+testValue, 0, 0, 0);
-				} else if (direction.equals("centre")) {
+				}/* else if (direction.equals("centre")) {
 					sender.rc(0, 0, channel3Mid + testValue, 0); // throttle only
-				} else if (direction.equals("descend")) {
+				} */else if (direction.equals("descend")) {
 					sender.rc(0, 0, 0, 0); //cancel all
 				}
 			} else if (data.toString().startsWith("test:")) {
@@ -184,73 +185,55 @@ public class DroneApplication {
     		}
     	});
     	
-		Thread moveCommandThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				//start move message sending
-				command(sender, imageProcessing);
-			}
-		});
+//		Thread moveCommandThread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				//stop move commands after 1 second
+//				while (true) {
+//					if (lastChangeTime != 0) {
+//						if (System.currentTimeMillis() - lastChangeTime >= 1000) {
+//							lastChangeTime = 0; //need this order otherwise another rc command may occur between 2 commands
+//							sender.rc(channel1Mid, channel2Mid, 0, 0);
+//						}
+//					}
+//				}
+//			}
+//		});
     	
 		imageProcessingThread.start();
 		mavlinkThread.start();
-		moveCommandThread.start();
+//		moveCommandThread.start();
     }
     
     public void changeMode(String mode, boolean armed) {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
+    
+    private int previousXPWM;
+    private int previousYPWM;
 
-	private void command(Sender sender, ImageProcessing imageProcessing) {
-    	while (true) {
-			sender.heartbeat();
-			
-			if (testMode && imageProcessing.xOffsetValue != -99999 && imageProcessing.yOffsetValue != -99999) {
-				if (drone.currentMode == 209) { //stabilize, alt_hold or land + ARMED mode
-					//may need to reverse orientation after testing
-					int xDirection = imageProcessing.xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
-					int yDirection = imageProcessing.yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
-					sender.rc(yDirection, xDirection, 0, 0);
-				}
-				
-			} /*else {
-				if (direction.equals("forward")) {
-					if (drone.currentCustomMode == 9){ sender.land(0, 30); }
-					else if (drone.currentCustomMode == 4){ sender.command(0, 0.5, 0); }
-					else { sender.rc(0, channel2Mid+testValue, 0, 0); } //	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
-				} else if (direction.equals("backward")) {
-					if (drone.currentCustomMode == 9){ sender.land(0, -30); }
-					else if (drone.currentCustomMode == 4){ sender.command(0, -0.5, 0); }
-					else { sender.rc(0, channel2Mid-testValue, 0, 0); } // elevator only (controls pitch)
-				} else if (direction.equals("left")) {
-					if (drone.currentCustomMode == 9){ sender.land(-30, 0); }
-					else if (drone.currentCustomMode == 4){ sender.command(-0.5, 0, 0); }
-					else { sender.rc(channel1Mid-testValue, 0, 0, 0); } //aileron only (controls roll)
-				} else if (direction.equals("right")) {
-					if (drone.currentCustomMode == 9){ sender.land(30, 0); }
-					else if (drone.currentCustomMode == 4){ sender.command(0.5, 0, 0); }
-					else { sender.rc(channel1Mid+testValue, 0, 0, 0); }
-				} else if (direction.equals("centre")) {
-					if (drone.currentCustomMode == 9){ sender.land(0, 0); }
-					else if (drone.currentCustomMode == 4){ sender.command(0,0,0); }
-					else { sender.rc(0, 0, channel3Mid + testValue, 0); } // throttle only
-				} else if (direction.equals("descend")) {
-					if (drone.currentCustomMode == 9){ sender.land(0, 0); }
-					else if (drone.currentCustomMode == 4){ sender.command(0,0,0.5); }
-					else { sender.rc(0, 0, 0, 0); } //cancel all
-				}
-			}*/
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
+	public void command(double xOffsetValue, double yOffsetValue) {
+		sender.heartbeat();		
+		if (testMode && drone.currentMode == 209) {
+			int xPWM = xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
+			int yPWM = yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
+			// set a range of 1m where we keep drone steady
+//			if (Math.abs(xOffsetValue) < 1) { xPWM = 0; }
+//			if (Math.abs(yOffsetValue) < 1) { yPWM = 0; }
+			if (xPWM != previousXPWM || yPWM != previousYPWM) { 
+				sender.rc(xPWM, yPWM, 0, 0); //only send new rc message if either of the PWM values have changed 
+				previousXPWM = xPWM;
+				previousYPWM = yPWM;
+//				lastChangeTime = System.currentTimeMillis();
+			}
 		}
 	}   
     
     private void land(Sender sender, String degreesString) {
     	while (true) {
 			if(sender.heartbeat()) {
-	    		System.out.println("Successfully set heartbeat");
+	    		System.out.println("Successfully sent heartbeat");
 	    	}
 			sender.land(Float.parseFloat(degreesString), 0);
 			try {
@@ -261,7 +244,7 @@ public class DroneApplication {
     
 	private void testHeartBeat(Sender sender) {
 		if(sender.heartbeat()) {
-    		System.out.println("Successfully set heartbeat");
+    		System.out.println("Successfully sent heartbeat");
     	}
 	}
     
@@ -305,11 +288,6 @@ public class DroneApplication {
                     drone.pitch = ((msg_ahrs2)msg).pitch;
                     drone.yaw = ((msg_ahrs2)msg).yaw;
                     drone.roll = -((msg_ahrs2)msg).roll;
-          //          System.out.println("pitch=" + pitch + " - roll="+roll + " - yaw=" +yaw);
-                /*} else if (msg != null && msg.messageType == msg_global_position_int.MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
-                    nb++;
-                    drone.altitude = ((msg_global_position_int)msg).alt - drone.initialAltitude;
-          //      	System.out.println("altitude=" + altitude); */
                 } else if (msg != null && msg.messageType == msg_heartbeat.MAVLINK_MSG_ID_HEARTBEAT) {
           //      	System.out.println("got heartbeat message!!!!!");
                 	nb++;
@@ -324,7 +302,7 @@ public class DroneApplication {
                 		channel3Mid = ((msg_rc_channels_raw)msg).chan3_raw;
                 		channel4Mid = ((msg_rc_channels_raw)msg).chan4_raw;
                 		sender.send(-3);
-                		System.out.println("got rc raw message!!!!! " + channel1Mid + " " + channel2Mid + " " + channel3Mid + " " + channel4Mid);
+                		System.out.println("got rc raw message! " + channel1Mid + " " + channel2Mid + " " + channel3Mid + " " + channel4Mid);
                 	}
                 }
             }
