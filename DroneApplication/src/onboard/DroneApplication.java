@@ -51,10 +51,10 @@ public class DroneApplication {
 	private int channel2Mid = 0;
 	private int channel3Mid = 0;
 	private int channel4Mid = 0;
-	private int testValue = 100; // the offset for the rc override messages
+	private int testValue = 75; // the offset for the rc override messages
 	private String ipAddress = "169.254.110.196";
-//	private static boolean testMode = false;
-	private boolean testMode = true;
+	private static boolean testMode = false;
+//	private boolean testMode = true;
 	
     /**
      * Entry point of onboard drone application
@@ -111,12 +111,26 @@ public class DroneApplication {
 				land(sender, arr[1]); //eg. land:10
 			} else if (data.toString().startsWith("command:")) {
 				direction = arr[1];
+				if (direction.equals("forward")) {
+					sender.rc(0, channel2Mid-testValue, 0, 0);//	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
+				} else if (direction.equals("backward")) {
+					sender.rc(0, channel2Mid+testValue, 0, 0); // elevator only (controls pitch)
+				} else if (direction.equals("left")) {
+					sender.rc(channel1Mid-testValue, 0, 0, 0);//aileron only (controls roll)
+				} else if (direction.equals("right")) {
+					sender.rc(channel1Mid+testValue, 0, 0, 0);
+				} else if (direction.equals("centre")) {
+					sender.rc(0, 0, channel3Mid + testValue, 0); // throttle only
+				} else if (direction.equals("descend")) {
+					sender.rc(0, 0, 0, 0); //cancel all
+				}
 			} else if (data.toString().startsWith("test:")) {
 				if (arr[1].equals("test")) {
 					testMode = Boolean.parseBoolean(arr[2]);
+				} else {
+					System.out.println("Setting test value to: " + arr[1]);
+					testValue = Integer.parseInt(arr[1]);
 				}
-				System.out.println("Setting test value to: " + arr[1]);
-				testValue = Integer.parseInt(arr[1]);
 			}
 		});
 	
@@ -200,7 +214,7 @@ public class DroneApplication {
 					sender.rc(yDirection, xDirection, 0, 0);
 				}
 				
-			} else {
+			} /*else {
 				if (direction.equals("forward")) {
 					if (drone.currentCustomMode == 9){ sender.land(0, 30); }
 					else if (drone.currentCustomMode == 4){ sender.command(0, 0.5, 0); }
@@ -226,9 +240,9 @@ public class DroneApplication {
 					else if (drone.currentCustomMode == 4){ sender.command(0,0,0.5); }
 					else { sender.rc(0, 0, 0, 0); } //cancel all
 				}
-			}
+			}*/
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {}
 		}
 	}   
