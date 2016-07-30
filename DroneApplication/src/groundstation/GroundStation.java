@@ -58,8 +58,9 @@ public class GroundStation extends Application {
 	private RangeSlider sSlider = new RangeSlider(0, 255, 100, 255);
 	private RangeSlider vSlider = new RangeSlider(0, 255, 100, 255);
 	private CheckBox armCheckBox = new CheckBox("Arm");
+	private CheckBox testCheckBox = new CheckBox("Test");
 	private RadioButton stabilizeModeButton = new RadioButton("Stabilize");
-	private RadioButton loiterModeButton = new RadioButton("Loiter");
+	private RadioButton loiterModeButton = new RadioButton("PosHold");
 	private RadioButton landModeButton = new RadioButton("Land");
 	private RadioButton guidedModeButton = new RadioButton("Guided");
 	private RadioButton altHoldModeButton = new RadioButton("Alt_Hold");
@@ -81,11 +82,11 @@ public class GroundStation extends Application {
 				// String message = "BaseStation: " ;
 				String message = input.getText();
 				//input.clear();
-				//messages.appendText(message + "\n");
+				//System.out.println(message + "\n");
 				try {
 					connection.send(message);
 				} catch (Exception e) {
-					System.out.println("Failed to send\n");
+					System.out.println("failed to send");
 				}
 			}
 		});
@@ -103,10 +104,27 @@ public class GroundStation extends Application {
 					connection.send("arm:false");
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 		});
 
+		//switch to start/stop the landing test
+		// ARM/DISARM event
+		testCheckBox.setOnAction(event -> {
+			try {
+				if (testCheckBox.isSelected() == true) {
+					System.out.println("TEST TRACKING");
+					connection.send("test:test:true");
+				} else {
+					System.out.println("STOP TRACKING");
+					// cbox.setSelected(true);
+					connection.send("test:test:false");
+				}
+			} catch (Exception e) {
+				System.out.println("failed to send");
+			}
+		});
+		
 		// Changing mode
 		stabilizeModeButton.setOnAction(event -> {
 			try {
@@ -116,7 +134,7 @@ public class GroundStation extends Application {
 					connection.send("mode:stabilize:" + armCheckBox.isSelected());
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 
 		});
@@ -129,7 +147,7 @@ public class GroundStation extends Application {
 					connection.send("mode:loiter:" + armCheckBox.isSelected());
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 
 		});
@@ -142,7 +160,7 @@ public class GroundStation extends Application {
 					connection.send("mode:land:" + armCheckBox.isSelected());
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 		});
 
@@ -154,7 +172,7 @@ public class GroundStation extends Application {
 					connection.send("mode:guided:" + armCheckBox.isSelected());
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 		});
 		
@@ -166,7 +184,7 @@ public class GroundStation extends Application {
 					connection.send("mode:alt_hold:" + armCheckBox.isSelected());
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 		});
 
@@ -177,7 +195,7 @@ public class GroundStation extends Application {
 					imgView.setImage(new WritableImage(640, 480));
 				}
 			} catch (Exception e) {
-				messages.appendText("Failed to send\n");
+				System.out.println("failed to send");
 			}
 		});
 
@@ -222,7 +240,7 @@ public class GroundStation extends Application {
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
-				guidedModeButton, altHoldModeButton);
+				guidedModeButton, altHoldModeButton, testCheckBox);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);
@@ -256,7 +274,7 @@ public class GroundStation extends Application {
 				connection.send("slider:v:" + vSlider.getLowValue() + ":" + vSlider.getHighValue());
 			}
 		} catch (Exception e) {
-			messages.appendText("Failed to send\n");
+			System.out.println("failed to send");
 		}
 	}
 
@@ -392,7 +410,7 @@ public class GroundStation extends Application {
 					} else if ((mode == 81 || mode == 209) && customMode == 9
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						landModeButton.setSelected(true);
-					} else if ((mode == 81 || mode == 209) && customMode == 5
+					} else if ((mode == 81 || mode == 209) && customMode == 16 //5 - previously
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						loiterModeButton.setSelected(true);
 					} else if ((mode == 89 || mode == 218) && customMode == 4

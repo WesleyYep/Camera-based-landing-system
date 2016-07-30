@@ -200,7 +200,8 @@ public class Sender {
 		}  else if (mode.equals("loiter")){
 			System.out.println("Setting to loiter mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
-			msg.custom_mode = 5; //custom mode 5 = LOITER for APM copter
+//			msg.custom_mode = 5; //custom mode 5 = LOITER for APM copter
+			msg.custom_mode = 16; //custom mode 16 = POSITION HOLD for APM copter
 		} else if (mode.equals("alt_hold")){
 			System.out.println("Setting to alt_hold mode");
 			msg.base_mode = MAV_MODE.MAV_MODE_STABILIZE_DISARMED + 1;
