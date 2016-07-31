@@ -51,7 +51,7 @@ public class DroneApplication {
 	private int channel2Mid = 0;
 	private int channel3Mid = 0;
 	private int channel4Mid = 0;
-	private int testValue = 75; // the offset for the rc override messages
+	private int testValue = 150; // the offset for the rc override messages
 	private String ipAddress = "169.254.110.196";
 	private long lastChangeTime = 0;
 	private boolean testMode = false;

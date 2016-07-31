@@ -192,7 +192,7 @@ public class ImageProcessing {
                     double relativeY = avY - centreY;
                     double relativeX = avX - centreX;
 //                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
-                    double aovHorizontal = Math.toRadians(39); //39
+                    double aovHorizontal = Math.toRadians(29); //39
                     double aovVertical = Math.toRadians(22);   //22
                     double pitch = drone.pitch;// Math.toRadians(0);
                     double roll = drone.roll;// Math.toRadians(0);
