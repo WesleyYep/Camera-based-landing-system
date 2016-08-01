@@ -47,14 +47,10 @@ public class DroneApplication {
 	public Drone drone = new Drone(); //represents drone properties eg. yaw, roll, pitch
 	private String direction = "";
 	private Sender sender;
-	private int channel1Mid = 0;
-	private int channel2Mid = 0;
-	private int channel3Mid = 0;
-	private int channel4Mid = 0;
-	private int testValue = 150; // the offset for the rc override messages
 	private String ipAddress = "169.254.110.196";
-	private long lastChangeTime = 0;
 	private boolean testMode = false;
+	private DroneController controller;
+	private boolean readyForCommand = true;
 //	private boolean testMode = true;
 	
     /**
@@ -86,6 +82,7 @@ public class DroneApplication {
     	}
 //    	
 	
+    	controller = new DroneController(sender);
 		ImageProcessing imageProcessing = new ImageProcessing(drone, this);
 		
 		imageProcessing.client = new Client(ipAddress, 55555, data ->{
@@ -113,24 +110,23 @@ public class DroneApplication {
 			} else if (data.toString().startsWith("command:")) {
 				direction = arr[1];
 				if (direction.equals("forward")) {
-					sender.rc(0, channel2Mid-testValue, 0, 0);//	public boolean rc(int aileronValue, int elevatorValue, int throttleValue, int rudderValue) {
+					controller.forward();
 				} else if (direction.equals("backward")) {
-					sender.rc(0, channel2Mid+testValue, 0, 0); // elevator only (controls pitch)
+					controller.backward();
 				} else if (direction.equals("left")) {
-					sender.rc(channel1Mid-testValue, 0, 0, 0);//aileron only (controls roll)
+					controller.left();
 				} else if (direction.equals("right")) {
-					sender.rc(channel1Mid+testValue, 0, 0, 0);
+					controller.right();
 				}/* else if (direction.equals("centre")) {
 					sender.rc(0, 0, channel3Mid + testValue, 0); // throttle only
-				} */else if (direction.equals("descend")) {
-					sender.rc(0, 0, 0, 0); //cancel all
+				} */else if (direction.equals("cancel")) {
+					controller.cancel();
 				}
 			} else if (data.toString().startsWith("test:")) {
 				if (arr[1].equals("test")) {
 					testMode = Boolean.parseBoolean(arr[2]);
 				} else {
-					System.out.println("Setting test value to: " + arr[1]);
-					testValue = Integer.parseInt(arr[1]);
+					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
 			}
 		});
@@ -188,14 +184,8 @@ public class DroneApplication {
 //		Thread moveCommandThread = new Thread(new Runnable() {
 //			@Override
 //			public void run() {
-//				//stop move commands after 1 second
 //				while (true) {
-//					if (lastChangeTime != 0) {
-//						if (System.currentTimeMillis() - lastChangeTime >= 1000) {
-//							lastChangeTime = 0; //need this order otherwise another rc command may occur between 2 commands
-//							sender.rc(channel1Mid, channel2Mid, 0, 0);
-//						}
-//					}
+//					command(imageProcessing.getXOffset(), imageProcessing.getYOffset());
 //				}
 //			}
 //		});
@@ -209,25 +199,14 @@ public class DroneApplication {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
-    
-    private int previousXPWM;
-    private int previousYPWM;
 
 	public void command(double xOffsetValue, double yOffsetValue) {
+		readyForCommand = false;
 		sender.heartbeat();		
 		if (testMode && drone.currentMode == 209) {
-			int xPWM = xOffsetValue > 0 ? channel1Mid+testValue : channel1Mid-testValue;
-			int yPWM = yOffsetValue > 0 ? channel2Mid-testValue : channel2Mid+testValue;
-			// set a range of 1m where we keep drone steady
-//			if (Math.abs(xOffsetValue) < 1) { xPWM = 0; }
-//			if (Math.abs(yOffsetValue) < 1) { yPWM = 0; }
-			if (xPWM != previousXPWM || yPWM != previousYPWM) { 
-				sender.rc(xPWM, yPWM, 0, 0); //only send new rc message if either of the PWM values have changed 
-				previousXPWM = xPWM;
-				previousYPWM = yPWM;
-//				lastChangeTime = System.currentTimeMillis();
-			}
+			controller.control(xOffsetValue, yOffsetValue);
 		}
+		readyForCommand = true;
 	}   
     
     private void land(Sender sender, String degreesString) {
@@ -297,12 +276,11 @@ public class DroneApplication {
                 	if (((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan2_raw && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan3_raw
                 			 && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan4_raw  && ((msg_rc_channels_raw)msg).chan2_raw != ((msg_rc_channels_raw)msg).chan3_raw) {
                 		nb++;
-                		channel1Mid = ((msg_rc_channels_raw)msg).chan1_raw;
-                		channel2Mid = ((msg_rc_channels_raw)msg).chan2_raw;
-                		channel3Mid = ((msg_rc_channels_raw)msg).chan3_raw;
-                		channel4Mid = ((msg_rc_channels_raw)msg).chan4_raw;
+                		controller.setChannels(((msg_rc_channels_raw)msg).chan1_raw,
+                				((msg_rc_channels_raw)msg).chan2_raw,
+                				((msg_rc_channels_raw)msg).chan3_raw,
+                				((msg_rc_channels_raw)msg).chan4_raw);
                 		sender.send(-3);
-                		System.out.println("got rc raw message! " + channel1Mid + " " + channel2Mid + " " + channel3Mid + " " + channel4Mid);
                 	}
                 }
             }
@@ -321,6 +299,10 @@ public class DroneApplication {
     		System.out.println("Successfully set ARMED to: " + arm);
     	}
     }
+	
+	public boolean isReadyForCommand() {
+		return readyForCommand;
+	}
     
     public void testSendToSerial(Sender sender, int streamId) {
     	if(sender.send(streamId)) {

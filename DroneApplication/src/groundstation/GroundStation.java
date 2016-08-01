@@ -320,7 +320,7 @@ public class GroundStation extends Application {
 						connection.send("command:centre");
 						break;
 					case C:
-						connection.send("command:descend");
+						connection.send("command:cancel");
 						break;
 					case DIGIT1:
 						connection.send("mode:stabilize:" + armCheckBox.isSelected());

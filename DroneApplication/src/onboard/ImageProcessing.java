@@ -28,6 +28,8 @@ public class ImageProcessing {
 	private boolean isBinary = false;
 	public Drone drone;
 	public DroneApplication droneApplication;
+	private double xOffset;
+	private double yOffset;
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -262,9 +264,13 @@ public class ImageProcessing {
                     double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
                     
                     //now find x and y offset
-                    double xOffset = altitude * Math.tan(thetaX);
-                    double yOffset = altitude * Math.tan(thetaY);
-                    droneApplication.command(xOffset, yOffset);
+                    xOffset = altitude * Math.tan(thetaX);
+                    yOffset = altitude * Math.tan(thetaY);
+                    
+                    //send command to drone if it is ready to accept commands
+                    if (droneApplication.isReadyForCommand()) {
+                    	droneApplication.command(xOffset, yOffset);
+                    }
                     
                     //send
 	        		try {
@@ -316,5 +322,12 @@ public class ImageProcessing {
 	private double distance(Point point, Point point2) {
 		return Math.sqrt(Math.pow(point.x-point2.x, 2) + Math.pow(point.y-point2.y, 2));
 	}
-   
+	
+	public double getXOffset() {
+		return xOffset;
+	}
+
+	public double getYOffset() {
+		return yOffset;
+	}
 }
