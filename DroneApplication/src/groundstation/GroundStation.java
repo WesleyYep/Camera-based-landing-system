@@ -64,6 +64,7 @@ public class GroundStation extends Application {
 	private RadioButton landModeButton = new RadioButton("Land");
 	private RadioButton guidedModeButton = new RadioButton("Guided");
 	private RadioButton altHoldModeButton = new RadioButton("Alt_Hold");
+	private Button calibrationButton = new Button("Calibrate");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
 	private long lastModeChangedTime;
@@ -120,6 +121,14 @@ public class GroundStation extends Application {
 					// cbox.setSelected(true);
 					connection.send("test:test:false");
 				}
+			} catch (Exception e) {
+				System.out.println("failed to send");
+			}
+		});
+		
+		calibrationButton.setOnAction(event -> {
+			try {
+				connection.send("calibrate");
 			} catch (Exception e) {
 				System.out.println("failed to send");
 			}
@@ -240,7 +249,7 @@ public class GroundStation extends Application {
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
-				guidedModeButton, altHoldModeButton, testCheckBox);
+				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);

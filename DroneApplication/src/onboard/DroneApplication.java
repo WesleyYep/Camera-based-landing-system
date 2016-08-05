@@ -25,6 +25,9 @@ package onboard;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.mavlink.MAVLinkReader;
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.ja4rtor.msg_ahrs2;
@@ -52,6 +55,7 @@ public class DroneApplication {
 	private DroneController controller;
 	private boolean readyForCommand = true;
 //	private boolean testMode = true;
+	private boolean calibrated = false;
 	
     /**
      * Entry point of onboard drone application
@@ -82,7 +86,7 @@ public class DroneApplication {
     	}
 //    	
 	
-    	controller = new DroneController(sender);
+    	controller = new DroneController(sender, this);
 		ImageProcessing imageProcessing = new ImageProcessing(drone, this);
 		
 		imageProcessing.client = new Client(ipAddress, 55555, data ->{
@@ -128,6 +132,9 @@ public class DroneApplication {
 				} else {
 					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
+			} else if (data.toString().equals("calibrate")) {
+        		sender.send(3);
+				calibrated = false;
 			}
 		});
 	
@@ -201,12 +208,11 @@ public class DroneApplication {
 	}
 
 	public void command(double xOffsetValue, double yOffsetValue) {
-		readyForCommand = false;
 		sender.heartbeat();		
-		if (testMode && drone.currentMode == 209) {
+		if (testMode) {
+			setReadyForCommand(false);
 			controller.control(xOffsetValue, yOffsetValue);
 		}
-		readyForCommand = true;
 	}   
     
     private void land(Sender sender, String degreesString) {
@@ -272,16 +278,14 @@ public class DroneApplication {
                 	nb++;
                 	drone.currentMode = ((msg_heartbeat)msg).base_mode;
                 	drone.currentCustomMode = ((msg_heartbeat)msg).custom_mode;
-                } else if (msg != null && msg.messageType == msg_rc_channels_raw.MAVLINK_MSG_ID_RC_CHANNELS_RAW) {
-                	if (((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan2_raw && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan3_raw
-                			 && ((msg_rc_channels_raw)msg).chan1_raw != ((msg_rc_channels_raw)msg).chan4_raw  && ((msg_rc_channels_raw)msg).chan2_raw != ((msg_rc_channels_raw)msg).chan3_raw) {
-                		nb++;
-                		controller.setChannels(((msg_rc_channels_raw)msg).chan1_raw,
-                				((msg_rc_channels_raw)msg).chan2_raw,
-                				((msg_rc_channels_raw)msg).chan3_raw,
-                				((msg_rc_channels_raw)msg).chan4_raw);
-                		sender.send(-3);
-                	}
+                } else if (!calibrated && msg != null && msg.messageType == msg_rc_channels_raw.MAVLINK_MSG_ID_RC_CHANNELS_RAW) {
+            		nb++;
+            		controller.setChannels(((msg_rc_channels_raw)msg).chan1_raw,
+            				((msg_rc_channels_raw)msg).chan2_raw,
+            				((msg_rc_channels_raw)msg).chan3_raw,
+            				((msg_rc_channels_raw)msg).chan4_raw);
+            		sender.send(-3);
+            		calibrated = true;
                 }
             }
         } catch (IOException e) {
@@ -333,6 +337,10 @@ public class DroneApplication {
         System.out.println("NBMSG (" + nb + ") : " + reader.getNbMessagesReceived() + " NBCRC=" + reader.getBadCRC() + " NBSEQ="
                           + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
     }
+
+	public void setReadyForCommand(boolean readyForCommand) {
+		this.readyForCommand = readyForCommand;
+	}
 
     
 }

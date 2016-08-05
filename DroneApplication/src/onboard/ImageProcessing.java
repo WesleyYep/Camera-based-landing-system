@@ -257,7 +257,7 @@ public class ImageProcessing {
                     double betaY = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
                     double thetaX = roll + betaX;
    //                 System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
-                    double thetaY = pitch + betaY;
+                    double thetaY = betaY- pitch;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
                     double actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192;
