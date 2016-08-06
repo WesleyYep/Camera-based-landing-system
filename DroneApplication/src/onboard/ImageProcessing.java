@@ -62,6 +62,7 @@ public class ImageProcessing {
         Mat hierarchy = new Mat();
         double previousVariance = -1;
         boolean isSmallPattern = false;
+        System.out.println("width: " + width + " height:" + height);
 
         try {
 			client.send("start");

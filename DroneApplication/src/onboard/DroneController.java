@@ -11,7 +11,7 @@ public class DroneController {
 	private int channel2Mid = 0;
 	private int channel3Mid = 0;
 	private int channel4Mid = 0;
-	private int testValue = 50; // the offset for the rc override messages
+	private int testValue = 100; // the offset for the rc override messages
 	private double minRange = 0.1; //metres
 	private double previousOffset = 9999999;
 	private int n = 1;
@@ -62,7 +62,7 @@ public class DroneController {
 				cancel();
 				previousOffset = offsetMagnitude;
 				droneApplication.setReadyForCommand(true);
-			}}, 1000);
+			}}, 200);
 	}
 
 	public void setTestValue(int value) {
