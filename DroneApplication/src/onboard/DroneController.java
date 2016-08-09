@@ -11,7 +11,7 @@ public class DroneController {
 	private int channel2Mid = 0;
 	private int channel3Mid = 0;
 	private int channel4Mid = 0;
-	private int testValue = 100; // the offset for the rc override messages
+	private int testValue = 150; // the offset for the rc override messages
 	private double minRange = 0.1; //metres
 	private double previousOffset = 9999999;
 	private int n = 1;
@@ -54,15 +54,43 @@ public class DroneController {
 	}
 
 	private void waitFor(double seconds, double offsetMagnitude) {
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//		Timer timer = new Timer();
+//		timer.schedule(new TimerTask() {
+//			@Override
+//			public void run() {
 				System.out.println("stopping command");
 				cancel();
 				previousOffset = offsetMagnitude;
 				droneApplication.setReadyForCommand(true);
-			}}, 200);
+//			}}, 200);
+	}
+	
+	public void circularSearch() {
+		int elev = 200;
+		int ail = 0;
+		int xPWM, yPWM;
+		
+		while (elev > -200) {
+			xPWM = channel1Mid+ail;
+			yPWM = channel2Mid+elev;
+			sender.rc(xPWM, yPWM, 0, 0);
+			elev -= 10;
+			ail = elev > 0 ? ail + 10 : ail - 10;
+		}
+		while (elev < 200) {
+			xPWM = channel1Mid+ail;
+			yPWM = channel2Mid+elev;
+			sender.rc(xPWM, yPWM, 0, 0);
+			elev += 10;
+			ail = elev < 0 ? ail - 10 : ail + 10;
+		}
+		//Thread.sleep(10); ?
 	}
 
 	public void setTestValue(int value) {
@@ -87,6 +115,7 @@ public class DroneController {
 	}
 
 	public void cancel() {
+		System.out.println("cancelling");
 		sender.rc(0, 0, 0, 0); //cancel all		
 	}
 	

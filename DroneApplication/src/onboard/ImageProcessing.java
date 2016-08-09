@@ -192,11 +192,11 @@ public class ImageProcessing {
 	        		
                     int centreX = width/2;
                     int centreY = height/2;
-                    double relativeY = avY - centreY;
+                    double relativeY = (avY - centreY)*-1; //camera is reversed
                     double relativeX = avX - centreX;
 //                    System.out.println("Centre - x: " + centreX + ", y: " + centreY + " ----- relative pos of QR - x: " + relativeX + ", y: " + relativeY);
-                    double aovHorizontal = Math.toRadians(31.1); //29
-                    double aovVertical = Math.toRadians(24.4);   //22
+                    double aovHorizontal = Math.toRadians(33.6); //29 31.1
+                    double aovVertical = Math.toRadians(24.5);   //22 24.4
                     double pitch = drone.pitch;// Math.toRadians(0);
                     double roll = drone.roll;// Math.toRadians(0);
 //                    double actualX, actualY;
@@ -262,7 +262,7 @@ public class ImageProcessing {
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
                     double actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192;
-                    double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*Math.toRadians(29)/640));
+                    double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*aovHorizontal/640));
                     
                     //now find x and y offset
                     xOffset = altitude * Math.tan(thetaX);
