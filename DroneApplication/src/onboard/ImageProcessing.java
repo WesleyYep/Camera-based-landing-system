@@ -261,7 +261,7 @@ public class ImageProcessing {
                     double thetaY = betaY- pitch;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
-                    double actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192;
+                    double actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192; // 0.303 : 0.051
                     double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*aovHorizontal/640));
                     
                     //now find x and y offset

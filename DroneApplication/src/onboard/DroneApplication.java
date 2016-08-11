@@ -74,7 +74,7 @@ public class DroneApplication {
 		sender = new Sender(spc);
     	try {
 			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-			spc.openPort(SerialPortList.getPortNames()[0]);
+			spc.openPort(SerialPortList.getPortNames()[1]); //change for raspberry pi 3
 			
 			if (!spc.isOpened()) {
 				System.err.println("Port not opened");
@@ -121,9 +121,9 @@ public class DroneApplication {
 					controller.left();
 				} else if (direction.equals("right")) {
 					controller.right();
-				}/* else if (direction.equals("centre")) {
-					sender.rc(0, 0, channel3Mid + testValue, 0); // throttle only
-				} */else if (direction.equals("cancel")) {
+				} else if (direction.equals("centre")) {
+					controller.circularSearch();
+				} else if (direction.equals("cancel")) {
 					controller.cancel();
 				}
 			} else if (data.toString().startsWith("test:")) {
