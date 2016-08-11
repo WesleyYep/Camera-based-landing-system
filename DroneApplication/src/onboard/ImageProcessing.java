@@ -30,6 +30,8 @@ public class ImageProcessing {
 	public DroneApplication droneApplication;
 	private double xOffset;
 	private double yOffset;
+    private boolean isSmallPattern = false;
+	private boolean bigPattern = false;
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -61,7 +63,6 @@ public class ImageProcessing {
         Mat upperRedThresholded = new Mat( imgTmp.size(), CvType.CV_8UC3 );
         Mat hierarchy = new Mat();
         double previousVariance = -1;
-        boolean isSmallPattern = false;
  //       System.out.println("width: " + width + " height:" + height);
 
         try {
@@ -230,7 +231,7 @@ public class ImageProcessing {
                     	ratio = dist1 > dist2 ? dist1/dist2 : dist2/dist1;
                     }
          //           System.out.println("angle is: " + angle + ", and ratio is: " + ratio);
-                    if (!isSmallPattern &&previousVariance != -1 && varianceY/previousVariance < 0.2) {
+                    if (!isSmallPattern && previousVariance != -1 && varianceY/previousVariance < 0.2) {
                     	isSmallPattern = true;
                     } else if (isSmallPattern && varianceY/previousVariance > 5) {
                     	isSmallPattern = false;
@@ -261,7 +262,12 @@ public class ImageProcessing {
                     double thetaY = betaY- pitch;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
-                    double actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192; // 0.303 : 0.051
+                    double actualSizeMetres;
+                    if (!bigPattern) { //half size pattern used
+                    	actualSizeMetres = !isSmallPattern ? 0.1155 : 0.0192; // 0.303 : 0.051
+                    } else { //full size pattern used
+                    	actualSizeMetres = !isSmallPattern ? 0.303 : 0.051;
+                    }
                     double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*aovHorizontal/640));
                     
                     //now find x and y offset
@@ -330,5 +336,15 @@ public class ImageProcessing {
 
 	public double getYOffset() {
 		return yOffset;
+	}
+	
+	public void setBigPattern(boolean value) {
+		bigPattern = value;
+		isSmallPattern = false;
+		if (bigPattern) {
+			System.out.println("Switched to big pattern");
+		} else {
+			System.out.println("Switched to small pattern");
+		}
 	}
 }

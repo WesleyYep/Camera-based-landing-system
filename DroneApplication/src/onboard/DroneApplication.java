@@ -132,10 +132,12 @@ public class DroneApplication {
 				} else {
 					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
+			} else if (data.toString().startsWith("pattern:")) {
+				imageProcessing.setBigPattern(arr[1].equals("true"));
 			} else if (data.toString().equals("calibrate")) {
         		sender.send(3);
 				calibrated = false;
-			}
+			} 
 		});
 	
     	//start camera for QR detection

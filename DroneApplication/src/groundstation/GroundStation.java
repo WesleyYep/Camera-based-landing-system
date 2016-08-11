@@ -44,7 +44,6 @@ public class GroundStation extends Application {
 	private MenuBar menuBar = new MenuBar();
 	private Menu menuA = new Menu("Menu");
 	private CheckBox streamToggle = new CheckBox("Stream");
-	// private CheckBox binaryToggle = new CheckBox("Binary");
 	private HBox topMenu;
 	private HBox botMenu;
 	private Pane display;
@@ -65,9 +64,12 @@ public class GroundStation extends Application {
 	private RadioButton guidedModeButton = new RadioButton("Guided");
 	private RadioButton altHoldModeButton = new RadioButton("Alt_Hold");
 	private Button calibrationButton = new Button("Calibrate");
+	private CheckBox bigPatternCheckBox = new CheckBox("Full size pattern");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
+	private Label detectedLabel = new Label("Pattern detected!");
 	private long lastModeChangedTime;
+	private long lastDetectedTime = System.currentTimeMillis();
 
 	static {
 		// Load the native OpenCV library
@@ -129,6 +131,18 @@ public class GroundStation extends Application {
 		calibrationButton.setOnAction(event -> {
 			try {
 				connection.send("calibrate");
+			} catch (Exception e) {
+				System.out.println("failed to send");
+			}
+		});
+		
+		bigPatternCheckBox.setOnAction(event -> {
+			try {
+				if (testCheckBox.isSelected() == true) {
+					connection.send("pattern:big");
+				} else {
+					connection.send("pattern:small");
+				}
 			} catch (Exception e) {
 				System.out.println("failed to send");
 			}
@@ -235,12 +249,12 @@ public class GroundStation extends Application {
 		vSlider.setShowTickMarks(true);
 		VBox sliderBox = new VBox(new Label("H"), hSlider, new Label("S"), sSlider, new Label("V"), vSlider, modeLabel);
 		sliderBox.setTranslateY(300);
-		landLabel.setTranslateY(250);
+		landLabel.setTranslateY(220);
+		detectedLabel.setTranslateY(250);
 
 		imgView.setImage(new WritableImage(640, 480));
 		imgView.setFitWidth(640);
 		imgView.setFitHeight(480);
-		imgView.setStyle("-fx-background-color: BLACK");
 
 		VBox root = new VBox(10, imgView, input);
 		// root.getChildren().add(arm);
@@ -249,26 +263,54 @@ public class GroundStation extends Application {
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
-				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton);
+				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton, bigPatternCheckBox);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);
 		landingArrow.setFill(Color.RED);
-		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, sliderBox);
+		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, detectedLabel, sliderBox);
 		altitudeText.setTranslateY(20);
 		positionText.setTranslateY(40);
 		distanceText.setFont(new Font("Serif", 18));
 		altitudeText.setFont(new Font("Serif", 18));
 		positionText.setFont(new Font("Serif", 18));
 		landLabel.setFont(new Font("Serif", 18));
+		detectedLabel.setFont(new Font("Serif", 18));
 		display.setPrefSize(384, 216);
 		display.setMaxHeight(216);
 		display.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, null, null)));
+		
+		monitorDetection();
+		
 		return root;
 	}
 
 	private void startTimer() {
 		lastModeChangedTime = System.currentTimeMillis();
+	}
+	
+	private void monitorDetection() {
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					if (System.currentTimeMillis() - lastDetectedTime > 1000) {
+						Platform.runLater(new Runnable() {
+				            @Override
+				            public void run() {
+								detectedLabel.setText("Pattern not detected");
+				            }
+				          });      
+					}
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		thread.start();
 	}
 
 	private void sliderChanged(String type) {
@@ -397,6 +439,8 @@ public class GroundStation extends Application {
 					double y = Double.parseDouble(arr[2]);
 					landingArrow.setRotate(Math.toDegrees(Math.atan2(-x, -y))); 
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
+					detectedLabel.setText("Pattern detected!");
+					lastDetectedTime = System.currentTimeMillis();
 				} else if (data.toString().startsWith("dist:")) {
 					// distanceText.setText(String.format("Total Distance:
 					// %.2f",
