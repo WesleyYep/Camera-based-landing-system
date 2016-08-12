@@ -77,7 +77,7 @@ public class ImageProcessing {
 	        	 System.out.println("Cannot read a frame from video stream");
 	             break;
 	        }
-	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_RGB2HSV); //Convert the captured frame from BGR to HSV
 	      
 	        Core.inRange(imgHSV, new Scalar(hMin,sMin,vMin), new Scalar(hMax,sMax,vMax), imgThresholded);
 	        

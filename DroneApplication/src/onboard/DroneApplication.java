@@ -73,7 +73,7 @@ public class DroneApplication {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
 		sender = new Sender(spc);
     	try {
-			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+			System.out.println("Trying to open " + SerialPortList.getPortNames()[1]);
 			spc.openPort(SerialPortList.getPortNames()[1]); //change for raspberry pi 3
 			
 			if (!spc.isOpened()) {
@@ -133,7 +133,7 @@ public class DroneApplication {
 					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
 			} else if (data.toString().startsWith("pattern:")) {
-				imageProcessing.setBigPattern(arr[1].equals("true"));
+				imageProcessing.setBigPattern(arr[1].equals("big"));
 			} else if (data.toString().equals("calibrate")) {
         		sender.send(3);
 				calibrated = false;

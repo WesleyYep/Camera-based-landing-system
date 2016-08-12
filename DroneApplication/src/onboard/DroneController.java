@@ -89,8 +89,13 @@ public class DroneController {
 			sender.rc(xPWM, yPWM, 0, 0);
 			elev += 10;
 			ail = elev < 0 ? ail - 10 : ail + 10;
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		//Thread.sleep(10); ?
+		cancel();
 	}
 
 	public void setTestValue(int value) {

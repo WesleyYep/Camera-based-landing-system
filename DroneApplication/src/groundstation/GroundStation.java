@@ -138,7 +138,7 @@ public class GroundStation extends Application {
 		
 		bigPatternCheckBox.setOnAction(event -> {
 			try {
-				if (testCheckBox.isSelected() == true) {
+				if (bigPatternCheckBox.isSelected() == true) {
 					connection.send("pattern:big");
 				} else {
 					connection.send("pattern:small");
