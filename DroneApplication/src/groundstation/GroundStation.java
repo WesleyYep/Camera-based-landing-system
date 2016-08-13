@@ -303,14 +303,14 @@ public class GroundStation extends Application {
 				          });      
 					}
 					//every 2 seconds after pattern was last detected, tell drone to search
-					if (System.currentTimeMillis() - lastDetectedTime > 2000) {
-						try {
-							connection.send("command:centre");
-							lastDetectedTime = System.currentTimeMillis();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}     
-					}
+//					if (testCheckBox.isSelected() && System.currentTimeMillis() - lastDetectedTime > 2000) {
+//						try {
+//							connection.send("command:centre");
+//							lastDetectedTime = System.currentTimeMillis();
+//						} catch (Exception e) {
+//							e.printStackTrace();
+//						}     
+//					}
 					try {
 						Thread.sleep(500);
 					} catch (InterruptedException e) {

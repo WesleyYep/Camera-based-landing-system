@@ -73,8 +73,8 @@ public class DroneApplication {
 		SerialPortCommunicator spc = new SerialPortCommunicator();
 		sender = new Sender(spc);
     	try {
-			System.out.println("Trying to open " + SerialPortList.getPortNames()[1]);
-			spc.openPort(SerialPortList.getPortNames()[1]); //change for raspberry pi 3
+			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
+			spc.openPort(SerialPortList.getPortNames()[0]); //change for raspberry pi 3
 			
 			if (!spc.isOpened()) {
 				System.err.println("Port not opened");
