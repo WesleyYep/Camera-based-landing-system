@@ -32,6 +32,7 @@ public class ImageProcessing {
 	private double yOffset;
     private boolean isSmallPattern = false;
 	private boolean bigPattern = false;
+	private long timeSinceLastSearchOrDetection = System.currentTimeMillis();
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -77,6 +78,13 @@ public class ImageProcessing {
 	        	 System.out.println("Cannot read a frame from video stream");
 	             break;
 	        }
+	        
+	        //do circular search if pattern hasn't been detected for 3 seconds
+	        if (System.currentTimeMillis() - timeSinceLastSearchOrDetection > 3000) {
+	        	droneApplication.circularSearchInBackground();
+	        	timeSinceLastSearchOrDetection = System.currentTimeMillis();
+	        }
+	        
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_RGB2HSV); //Convert the captured frame from BGR to HSV
 	      
 	        Core.inRange(imgHSV, new Scalar(hMin,sMin,vMin), new Scalar(hMax,sMax,vMax), imgThresholded);
@@ -92,7 +100,7 @@ public class ImageProcessing {
 //	        //morphological closing (removes small holes from the foreground)
 //	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
 //	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
-	
+	        
 	        //send binary image here
 	        if (isStreaming && isBinary ) {
 		        byte[] data = new byte[(int) (width * height * imgThresholded.channels())];
@@ -273,6 +281,9 @@ public class ImageProcessing {
                     //now find x and y offset
                     xOffset = altitude * Math.tan(thetaX);
                     yOffset = altitude * Math.tan(thetaY);
+                    
+                    //set time last detected
+                    timeSinceLastSearchOrDetection = System.currentTimeMillis();
                     
                     //send command to drone if it is ready to accept commands
                     if (droneApplication.isReadyForCommand()) {

@@ -216,6 +216,16 @@ public class DroneApplication {
 			controller.control(xOffsetValue, yOffsetValue);
 		}
 	}   
+	
+	public void circularSearchInBackground() {
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				controller.circularSearch();
+			}
+		});
+		thread.start();
+	}
     
     private void land(Sender sender, String degreesString) {
     	while (true) {

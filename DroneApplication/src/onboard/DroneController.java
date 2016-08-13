@@ -62,18 +62,12 @@ public class DroneController {
 			Thread.sleep(200);
 			System.out.println("stopping command");
 			cancel();
+			Thread.sleep(800);
 			previousOffset = offsetMagnitude;
 			droneApplication.setReadyForCommand(true);
-			Thread.sleep(800);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-//		Timer timer = new Timer();
-//		timer.schedule(new TimerTask() {
-//			@Override
-//			public void run() {
-//			}}, 200);
 	}
 	
 	public void circularSearch() {
