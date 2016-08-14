@@ -56,6 +56,7 @@ public class DroneApplication {
 	private boolean readyForCommand = true;
 //	private boolean testMode = true;
 	private boolean calibrated = false;
+	private double xOffsetValue, yOffsetValue;
 	
     /**
      * Entry point of onboard drone application
@@ -129,6 +130,9 @@ public class DroneApplication {
 			} else if (data.toString().startsWith("test:")) {
 				if (arr[1].equals("test")) {
 					testMode = Boolean.parseBoolean(arr[2]);
+					if (testMode) {
+						command();
+					}
 				} else {
 					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
@@ -209,15 +213,29 @@ public class DroneApplication {
 		sender.mode(mode, armed);
 	}
 
-	public void command(double xOffsetValue, double yOffsetValue) {
-		sender.heartbeat();		
-		if (testMode) {
-			setReadyForCommand(false);
-			controller.control(xOffsetValue, yOffsetValue);
-		}
-	}   
+	public void command(/*double xOffsetValue, double yOffsetValue*/) {
+		Thread t = new Thread(new Runnable () {
+			@Override
+			public void run() {
+				System.out.println("test mode activated!!!");
+				while (testMode) {
+					sender.heartbeat();		
+				//if (testMode) {
+				//	setReadyForCommand(false);
+					controller.control(xOffsetValue, yOffsetValue);
+				//}
+				}
+				System.out.println("test mode deactivated");
+			}
+		});
+		t.start();
+	}
 	
 	public void circularSearchInBackground() {
+		if (!testMode) {
+	//		System.out.println("circular search not carried out since test mode not active");
+			return;
+		}
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -352,6 +370,11 @@ public class DroneApplication {
 
 	public void setReadyForCommand(boolean readyForCommand) {
 		this.readyForCommand = readyForCommand;
+	}
+	
+	public void setOffsetValues(double x, double y) {
+		this.xOffsetValue = x;
+		this.yOffsetValue = y;
 	}
 
     

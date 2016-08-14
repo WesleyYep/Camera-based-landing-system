@@ -1,8 +1,4 @@
 package onboard;
-
-import java.util.Timer;
-import java.util.TimerTask;
-
 import serial.Sender;
 
 public class DroneController {
@@ -11,8 +7,8 @@ public class DroneController {
 	private int channel2Mid = 0;
 	private int channel3Mid = 0;
 	private int channel4Mid = 0;
-	private int testValue = 50; // the offset for the rc override messages
-	private double minRange = 0.1; //metres
+	private int testValue = 150; // the offset for the rc override messages
+	private double minRange = 0.3; //metres
 	private double previousOffset = 9999999;
 	private String previousDirection = "";
 	private int n = 1;
@@ -35,11 +31,14 @@ public class DroneController {
 	
 	
 	public void control(double offsetX, double offsetY) {
+		if (offsetX == -1 && offsetY == -1) {
+			return;
+		}
 		String directionX = offsetX > 0 ? "right" : "left";
-		String directionY = offsetY < 0 ? "forwards" : "backwards";
+		String directionY = offsetY > 0 ? "forwards" : "backwards";
 		String currentDirection = directionX + directionY;
 		int xPWM = offsetX > 0 ? channel1Mid+testValue : channel1Mid-testValue;
-		int yPWM = offsetY < 0 ? channel2Mid-testValue : channel2Mid+testValue;
+		int yPWM = offsetY > 0 ? channel2Mid-testValue : channel2Mid+testValue;
 		// set a range of 1m where we keep drone steady
 		if (Math.abs(offsetX) < minRange) { xPWM = 0; directionX = "none"; }
 		if (Math.abs(offsetY) < minRange) { yPWM = 0; directionY = "none"; }

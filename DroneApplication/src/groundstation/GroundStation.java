@@ -437,7 +437,7 @@ public class GroundStation extends Application {
 					// pos:x:y
 					double x = Double.parseDouble(arr[1]) * -1; 
 					double y = Double.parseDouble(arr[2]);
-					landingArrow.setRotate(Math.toDegrees(Math.atan2(-x, -y))); 
+					landingArrow.setRotate(Math.toDegrees(Math.atan2(-x, y))); 
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 					detectedLabel.setText("Pattern detected!");
 					lastDetectedTime = System.currentTimeMillis();

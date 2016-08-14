@@ -79,11 +79,12 @@ public class ImageProcessing {
 	             break;
 	        }
 	        
-	        //do circular search if pattern hasn't been detected for 3 seconds
-	        if (System.currentTimeMillis() - timeSinceLastSearchOrDetection > 3000) {
-	        	droneApplication.circularSearchInBackground();
-	        	timeSinceLastSearchOrDetection = System.currentTimeMillis();
-	        }
+	        //do circular search if pattern hasn't been detected for 5 seconds
+//	        if (System.currentTimeMillis() - timeSinceLastSearchOrDetection > 5000) {
+//	     //   	System.out.println("should do search");
+//	        	droneApplication.circularSearchInBackground();
+//	        	timeSinceLastSearchOrDetection = System.currentTimeMillis();
+//	        }
 	        
 	        Imgproc.cvtColor(imgOriginal, imgHSV, Imgproc.COLOR_RGB2HSV); //Convert the captured frame from BGR to HSV
 	      
@@ -124,7 +125,7 @@ public class ImageProcessing {
 	        		double dM01 = moments.m01;
 	    	        double dM10 = moments.m10;
 	    	        double dArea = moments.m00;
-	    	        if (dArea > 500/* && dArea < 20000*/) {
+	    	        if (dArea > 200/* && dArea < 20000*/) {
 	    	        	//calculate the position of the marker
 	    	        	int posX = (int) (dM10 / dArea);
 	    	        	int posY = (int) (dM01 / dArea);
@@ -265,9 +266,9 @@ public class ImageProcessing {
                     //now find altitude - swap since camera is at 90 degrees to drone direction
                     double betaX = Math.atan(Math.tan(aovHorizontal) * relativeX / (width/2));
                     double betaY = Math.atan(Math.tan(aovVertical) * relativeY / (height/2));
-                    double thetaX = roll + betaX;
+                    double thetaX = betaX + roll;
    //                 System.out.println("betaX = " + betaX + ", roll = " + roll + " , thetaX = " + thetaX + " relativeY=" + relativeY);
-                    double thetaY = betaY- pitch;
+                    double thetaY = betaY + pitch;
    //                 System.out.println("betaY = " + betaY + ", pitch = " + pitch + " , thetaY = " + thetaY + " relativeX=" + relativeX);
                     //double altitude = Math.sqrt(squared(actualDistance)/(1+squared(Math.tan(thetaX)) + squared(Math.tan(thetaY))));
                     double actualSizeMetres;
@@ -286,9 +287,10 @@ public class ImageProcessing {
                     timeSinceLastSearchOrDetection = System.currentTimeMillis();
                     
                     //send command to drone if it is ready to accept commands
-                    if (droneApplication.isReadyForCommand()) {
-                    	droneApplication.command(xOffset, yOffset);
-                    }
+//                    if (droneApplication.isReadyForCommand()) {
+//                    	droneApplication.command(xOffset, yOffset);
+                    	droneApplication.setOffsetValues(xOffset, yOffset);
+//                    }
                     
                     //send
 	        		try {
@@ -298,6 +300,8 @@ public class ImageProcessing {
 					} catch (Exception e) {
 						failure(e);
 					}
+	        	} else {
+	        		droneApplication.setOffsetValues(-1, -1);
 	        	}
 	        }
 
