@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.videoio.VideoCapture;
@@ -33,6 +34,7 @@ public class ImageProcessing {
     private boolean isSmallPattern = false;
 	private boolean bigPattern = false;
 	private long timeSinceLastSearchOrDetection = System.currentTimeMillis();
+	private Mat imgTmp = new Mat();
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -54,7 +56,6 @@ public class ImageProcessing {
         }
 
 	    //Capture a temporary image from the camera
-	 	Mat imgTmp = new Mat();
 	 	cap.read(imgTmp); 
 	 	int width = imgTmp.width();
 	 	int height = imgTmp.height();
@@ -361,5 +362,9 @@ public class ImageProcessing {
 		} else {
 			System.out.println("Switched to small pattern");
 		}
+	}
+
+	public void snapshot() {
+		Imgcodecs.imwrite("snapshot" + System.currentTimeMillis() + ".png", imgTmp);
 	}
 }

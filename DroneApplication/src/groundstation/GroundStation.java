@@ -65,6 +65,7 @@ public class GroundStation extends Application {
 	private RadioButton altHoldModeButton = new RadioButton("Alt_Hold");
 	private Button calibrationButton = new Button("Calibrate");
 	private CheckBox bigPatternCheckBox = new CheckBox("Full size pattern");
+	private Button snapshotButton = new Button("Snapshot");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
 	private Label detectedLabel = new Label("Pattern detected!");
@@ -221,6 +222,14 @@ public class GroundStation extends Application {
 				System.out.println("failed to send");
 			}
 		});
+		
+		snapshotButton.setOnAction(event -> {
+			try {
+				connection.send("snapshot");
+			} catch (Exception e) {
+				System.out.println("failed to send");
+			}
+		});
 
 		ToggleGroup group = new ToggleGroup();
 		stabilizeModeButton.setToggleGroup(group);
@@ -263,7 +272,7 @@ public class GroundStation extends Application {
 		menuBar.getMenus().addAll(menuA);
 		topMenu.getChildren().add(menuBar);
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
-				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton, bigPatternCheckBox);
+				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton, bigPatternCheckBox, snapshotButton);
 
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);

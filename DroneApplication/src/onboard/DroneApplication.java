@@ -141,7 +141,9 @@ public class DroneApplication {
 			} else if (data.toString().equals("calibrate")) {
         		sender.send(3);
 				calibrated = false;
-			} 
+			} else if (data.toString().equals("snapshot")) {
+				imageProcessing.snapshot();
+			}
 		});
 	
     	//start camera for QR detection
@@ -204,7 +206,7 @@ public class DroneApplication {
 //		});
     	
 		imageProcessingThread.start();
-		mavlinkThread.start();
+//		mavlinkThread.start();
 //		moveCommandThread.start();
     }
     
