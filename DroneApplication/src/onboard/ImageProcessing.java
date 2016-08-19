@@ -34,7 +34,7 @@ public class ImageProcessing {
     private boolean isSmallPattern = false;
 	private boolean bigPattern = false;
 	private long timeSinceLastSearchOrDetection = System.currentTimeMillis();
-	private Mat imgTmp = new Mat();
+	private int snapshotCounter = 0;
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -56,6 +56,7 @@ public class ImageProcessing {
         }
 
 	    //Capture a temporary image from the camera
+        Mat imgTmp = new Mat();
 	 	cap.read(imgTmp); 
 	 	int width = imgTmp.width();
 	 	int height = imgTmp.height();
@@ -79,6 +80,10 @@ public class ImageProcessing {
 	        	 System.out.println("Cannot read a frame from video stream");
 	             break;
 	        }
+	        if (snapshotCounter > 0) {
+	    		Imgcodecs.imwrite("snapshot_original_" + System.currentTimeMillis() + ".png", imgOriginal);
+	    		snapshotCounter--;
+	        }
 	        
 	        //do circular search if pattern hasn't been detected for 5 seconds
 //	        if (System.currentTimeMillis() - timeSinceLastSearchOrDetection > 5000) {
@@ -94,6 +99,11 @@ public class ImageProcessing {
 	        //detect second red
 	        Core.inRange(imgHSV, new Scalar(160,sMin,vMin), new Scalar(180,sMax,vMax), upperRedThresholded);
 	        Core.add(imgThresholded, upperRedThresholded, imgThresholded);
+	        
+	        if (snapshotCounter > 0) {
+	    		Imgcodecs.imwrite("snapshot_threshold_" + System.currentTimeMillis() + ".png", imgThresholded);
+	    		snapshotCounter--;
+	        }
 	        
 	        //morphological opening (removes small objects from the foreground)
 //	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
@@ -248,14 +258,15 @@ public class ImageProcessing {
                     }
                     previousVariance = varianceY;
                     try {
-                    	double normalRatio = !isSmallPattern ? 1.14 : 1.44; //based on current A3 landing pad
+                    	double normalRatio = !isSmallPattern ? 1.06 : 1.06; //based on big landing pad
 	                    if (isLandingPadFlat) {
-	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || Math.abs(normalRatio - ratio) > 0.02) {
+	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || Math.abs(normalRatio - ratio) > 0.05) {
 	                    		client.send("flat:false");
 	                    		isLandingPadFlat = false;
 	                    	}
 	                    } else {
-	                    	if (Math.abs(Math.abs(angle)%180-90) <= 5 && Math.abs(normalRatio - ratio) < 0.02) {
+//	                    	System.out.println("angle: " + angle + "   ratio: " + ratio);
+	                    	if (Math.abs(Math.abs(angle)%180-90) <= 5 && Math.abs(normalRatio - ratio) < 0.05) {
 	                    		client.send("flat:true");
 	                    		isLandingPadFlat = true;
 	                    	}
@@ -306,8 +317,15 @@ public class ImageProcessing {
 	        	}
 	        }
 
+	        if (snapshotCounter > 0) {
+	    		Imgcodecs.imwrite("snapshot_final_" + System.currentTimeMillis() + ".png", imgOriginal);
+	    		Imgcodecs.imwrite("snapshot_contours_" + System.currentTimeMillis() + ".png", imgThresholded);
+	    		snapshotCounter--;
+	        }
+	        
 	        if (isStreaming && !isBinary) {
 		        byte[] data = new byte[(int) (width * height * imgOriginal.channels())];
+		        Imgproc.cvtColor(imgOriginal, imgOriginal, Imgproc.COLOR_RGB2BGR);
 		        imgOriginal.get(0, 0, data);
 		        try {
 		        	streamClient.sendBytes(data);
@@ -365,6 +383,6 @@ public class ImageProcessing {
 	}
 
 	public void snapshot() {
-		Imgcodecs.imwrite("snapshot" + System.currentTimeMillis() + ".png", imgTmp);
+		snapshotCounter = 3;
 	}
 }

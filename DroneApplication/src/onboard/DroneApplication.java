@@ -206,7 +206,7 @@ public class DroneApplication {
 //		});
     	
 		imageProcessingThread.start();
-//		mavlinkThread.start();
+		mavlinkThread.start();
 //		moveCommandThread.start();
     }
     
