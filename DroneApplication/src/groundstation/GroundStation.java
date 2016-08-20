@@ -54,7 +54,7 @@ public class GroundStation extends Application {
 	private Label positionText = new Label("Relative Position: ");
 	private ImageView imgView = new ImageView();
 	private RangeSlider hSlider = new RangeSlider(0, 180, 0, 10);
-	private RangeSlider sSlider = new RangeSlider(0, 255, 100, 255);
+	private RangeSlider sSlider = new RangeSlider(0, 255, 75, 255);
 	private RangeSlider vSlider = new RangeSlider(0, 255, 100, 255);
 	private CheckBox armCheckBox = new CheckBox("Arm");
 	private CheckBox testCheckBox = new CheckBox("Test");
@@ -425,7 +425,7 @@ public class GroundStation extends Application {
 				StreamServer streamServer = new StreamServer(55556, GroundStation.this);
 				try {
 					streamServer.startConnection();
-					streamServer.receiveBytes();
+					streamServer.receiveBytes();	
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

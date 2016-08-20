@@ -56,7 +56,7 @@ public class DroneApplication {
 	private boolean readyForCommand = true;
 //	private boolean testMode = true;
 	private boolean calibrated = false;
-	private double xOffsetValue, yOffsetValue;
+	private double xOffsetValue, yOffsetValue, altitude;
 	
     /**
      * Entry point of onboard drone application
@@ -224,7 +224,7 @@ public class DroneApplication {
 					sender.heartbeat();		
 				//if (testMode) {
 				//	setReadyForCommand(false);
-					controller.control(xOffsetValue, yOffsetValue);
+					controller.control(xOffsetValue, yOffsetValue, altitude);
 				//}
 				}
 				System.out.println("test mode deactivated");
@@ -374,9 +374,10 @@ public class DroneApplication {
 		this.readyForCommand = readyForCommand;
 	}
 	
-	public void setOffsetValues(double x, double y) {
+	public void setOffsetValues(double x, double y, double altitude) {
 		this.xOffsetValue = x;
 		this.yOffsetValue = y;
+		this.altitude = altitude;
 	}
 
     

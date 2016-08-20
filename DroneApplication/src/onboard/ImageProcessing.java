@@ -104,26 +104,7 @@ public class ImageProcessing {
 	    		Imgcodecs.imwrite("snapshot_threshold_" + System.currentTimeMillis() + ".png", imgThresholded);
 	    		snapshotCounter--;
 	        }
-	        
-	        //morphological opening (removes small objects from the foreground)
-//	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
-//	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
-//	
-//	        //morphological closing (removes small holes from the foreground)
-//	        Imgproc.dilate( imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) ); 
-//	        Imgproc.erode(imgThresholded, imgThresholded, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5)) );
-	        
-	        //send binary image here
-	        if (isStreaming && isBinary ) {
-		        byte[] data = new byte[(int) (width * height * imgThresholded.channels())];
-		        imgThresholded.get(0, 0, data);
-		        try {
-		        	streamClient.sendBytes(data);
-				} catch (Exception e) {
-					failure(e);
-				}
-	        }
-	        
+
 	        //see if we can find blobs based on contours
 	        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 	        
@@ -301,7 +282,7 @@ public class ImageProcessing {
                     //send command to drone if it is ready to accept commands
 //                    if (droneApplication.isReadyForCommand()) {
 //                    	droneApplication.command(xOffset, yOffset);
-                    	droneApplication.setOffsetValues(xOffset, yOffset);
+                    	droneApplication.setOffsetValues(xOffset, yOffset, altitude);
 //                    }
                     
                     //send
@@ -313,7 +294,7 @@ public class ImageProcessing {
 						failure(e);
 					}
 	        	} else {
-	        		droneApplication.setOffsetValues(-1, -1);
+	        		droneApplication.setOffsetValues(-1, -1, -1);
 	        	}
 	        }
 
