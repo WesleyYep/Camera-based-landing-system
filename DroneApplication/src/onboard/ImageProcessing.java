@@ -296,7 +296,9 @@ public class ImageProcessing {
 	        	} else {
 	        		droneApplication.setOffsetValues(-1, -1, -1);
 	        	}
-	        }
+	        }else {
+        		droneApplication.setOffsetValues(-1, -1, -1);
+        	}
 
 	        if (snapshotCounter > 0) {
 	    		Imgcodecs.imwrite("snapshot_final_" + System.currentTimeMillis() + ".png", imgOriginal);
