@@ -240,7 +240,8 @@ public class ImageProcessing {
                     previousVariance = varianceY;
                     try {
                     	double normalRatio = !isSmallPattern ? 1.06 : 1.06; //based on big landing pad
-	                    if (isLandingPadFlat) {
+                    //	System.out.println("angle: " + angle + " , ratio: " + ratio);
+                    	if (isLandingPadFlat) {
 	                    	if (Math.abs(Math.abs(angle)%180-90) > 5 || Math.abs(normalRatio - ratio) > 0.05) {
 	                    		client.send("flat:false");
 	                    		isLandingPadFlat = false;

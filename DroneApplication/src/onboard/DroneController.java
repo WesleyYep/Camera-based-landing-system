@@ -34,30 +34,41 @@ public class DroneController {
 		if (offsetX == -1 && offsetY == -1) {
 			return;
 		}
-		double a = 0.05333, b = 0.373333; // range = a * h + b (where a = altitude) 0.4-0.8
-		double c = 14,d = 100; // PWM = c * h + d (set maximum is 150 though - at 5m)
-		double minRange = altitude * a + b;
-		int PWM = (int)Math.max(100, Math.min(170,c * altitude + d)); //min = 50, max = 150
-		PWM += 5*n;
+		double a = 0.1, b = 0.1; // range = a * h + b (where a = altitude) 0.2-0.9
+		double c = 14.28,d = 35.7; // PWM = c * h + d (50-150)
+		double minRange = (int)Math.max(0.2, altitude * a + b);
+		int PWM = (int)Math.max(50, Math.min(150,c * altitude + d)); //min = 50, max = 150
+		PWM += 5*n; //add PWM if we haven't got closer for a while
+//		PWM *= 1.5;
 		System.out.println("range: " + minRange + "   PWM = " + PWM);
 		String directionX = offsetX > 0 ? "right" : "left";
 		String directionY = offsetY > 0 ? "forwards" : "backwards";
 		int xPWM = offsetX > 0 ? channel1Mid+PWM : channel1Mid-PWM;
 		int yPWM = offsetY > 0 ? channel2Mid-PWM : channel2Mid+PWM;
-		// set a minimum where we keep drone steady
-		if (Math.abs(offsetX) < minRange) { xPWM = 0; directionX = "none"; }
-		if (Math.abs(offsetY) < minRange) { yPWM = 0; directionY = "none"; }
+		// set a minimum where we keep drone steady (if less than 2m altitude)
+		if (Math.abs(offsetX) < minRange && altitude < 2) { xPWM = 0; directionX = "none"; }
+		if (Math.abs(offsetY) < minRange && altitude < 2) { yPWM = 0; directionY = "none"; }
 		String currentDirection = directionX + directionY;
 		boolean isDescending = (xPWM == 0 && yPWM == 0);
 		int throttlePWM = isDescending? channel3Low : 0; //descend
+		
+		//land mode
+		if (isDescending && altitude <= 1) {
+			sender.mode("land", true);
+		}
+		
 		double offsetMagnitude = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
 		if (!currentDirection.equals(previousDirection) || offsetMagnitude < previousOffset) {
-			n = 1; //we've gotten closer so just keep moving n=1 sec at a time
+			n = 1; //we've gotten closer so don't increment n
 		} else {
 			n += 1; //we haven't got any closer, and still same direction, so increase n
 		}
 		//move toward pattern for n secs
-		sender.rc(xPWM, yPWM, throttlePWM, 0);
+		if (altitude < 2) {
+			sender.rc(xPWM, yPWM, throttlePWM, 0);
+		} else{
+			sender.rc(xPWM, yPWM, channel3Low, 0);
+		}
 		previousDirection = currentDirection;
 		System.out.println("Moving: " + directionX + ", " + directionY + " for " + n + " times, descending="+(throttlePWM!=0));
 		waitFor(offsetMagnitude, isDescending);
@@ -65,7 +76,7 @@ public class DroneController {
 
 	private void waitFor(double offsetMagnitude, boolean isDescending) {
 		try {
-			int length = isDescending? 200 : 500;
+			int length = 200; //isDescending? 200 : 1000;
 			Thread.sleep(length);
 			System.out.println("stopping command");
 			cancel();
@@ -126,7 +137,7 @@ public class DroneController {
 	}
 
 	public void cancel() {
-		System.out.println("cancelling");
+	//	System.out.println("cancelling");
 		sender.rc(0, 0, 0, 0); //cancel all		
 	}
 	

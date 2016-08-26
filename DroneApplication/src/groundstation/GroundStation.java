@@ -472,10 +472,10 @@ public class GroundStation extends Application {
 					} else if ((mode == 81 || mode == 209) && customMode == 9
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						landModeButton.setSelected(true);
-					} else if ((mode == 81 || mode == 209) && customMode == 16 //5 - previously
+					} else if ((mode == 89 || mode == 217) && customMode == 5 //5 - previously
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						loiterModeButton.setSelected(true);
-					} else if ((mode == 89 || mode == 218) && customMode == 4
+					} else if ((mode == 89 || mode == 217) && customMode == 4
 							&& System.currentTimeMillis() - lastModeChangedTime > 3000) {
 						guidedModeButton.setSelected(true);
 					} else if ((mode == 81 || mode == 209) && customMode == 2
