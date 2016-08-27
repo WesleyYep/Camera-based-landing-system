@@ -143,6 +143,8 @@ public class DroneApplication {
 				calibrated = false;
 			} else if (data.toString().equals("snapshot")) {
 				imageProcessing.snapshot();
+			} else if (data.toString().startsWith("range:")) {
+				controller.setPWMranges(Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
 			}
 		});
 	
