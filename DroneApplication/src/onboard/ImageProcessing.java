@@ -33,8 +33,9 @@ public class ImageProcessing {
 	private double yOffset;
     private boolean isSmallPattern = false;
 	private boolean bigPattern = false;
-	private long timeSinceLastSearchOrDetection = System.currentTimeMillis();
+	private long lastTime = System.currentTimeMillis();
 	private int snapshotCounter = 0;
+	private double previousX, previousY;
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -277,19 +278,23 @@ public class ImageProcessing {
                     xOffset = altitude * Math.tan(thetaX);
                     yOffset = altitude * Math.tan(thetaY);
                     
-                    //set time last detected
-                    timeSinceLastSearchOrDetection = System.currentTimeMillis();
-                    
                     //send command to drone if it is ready to accept commands
 //                    if (droneApplication.isReadyForCommand()) {
 //                    	droneApplication.command(xOffset, yOffset);
                     	droneApplication.setOffsetValues(xOffset, yOffset, altitude);
 //                    }
-                    
+                	long thisTime = System.currentTimeMillis();
+                    double xVelocity = (xOffset - previousX)/(thisTime-lastTime)*1000;                  
+                    double yVelocity = (yOffset - previousY)/(thisTime-lastTime)*1000;
+                    lastTime = thisTime;
+            		previousX = xOffset;
+                	previousY = yOffset;
+                    	
                     //send
 	        		try {
 						client.send("pos:" + xOffset + ":" + yOffset);
 						client.send("alt:" + altitude);
+						client.send("velocity:" + xVelocity + ":" + yVelocity);
 				//		client.send("dist:"+ actualDistance);
 					} catch (Exception e) {
 						failure(e);

@@ -35,15 +35,16 @@ public class DroneController {
 		if (offsetX == -1 && offsetY == -1) {
 			return;
 		}
-		double a = 0.1, b = 0.1; // range = a * h + b (where a = altitude) 0.2-0.9
+		//double a = 0.1, b = 0.3; // range = a * h + b (where a = altitude) 0.4-1.1
 		double c = (maxPWM - minPWM)/(6.00 - 1.00); // PWM = c * h + d (70-170)
-		double d = 70 - c;
+		double d = minPWM - c;
 	//	double c = 20,d = 50; 
-		double minRange = Math.max(0.2, altitude * a + b);
-		int PWM = (int)Math.max(70, Math.min(170,c * altitude + d)); //min = 50, max = 150
+		double minRange = 0.4; // try constant 0.4
+	//	double minRange = Math.max(0.4, altitude * a + b);
+		int PWM = (int)Math.max(70, Math.min(500,c * altitude + d)); //min = 50, max = 150
 		PWM += 5*(n-1); //add PWM if we haven't got closer for a while
 //		PWM *= 1.5;
-		System.out.println("c: " + c + ", d: " + d + " ,range: " + minRange + "   PWM = " + PWM);
+//		System.out.println("c: " + c + ", d: " + d + " ,range: " + minRange + "   PWM = " + PWM);
 		String directionX = offsetX > 0 ? "right" : "left";
 		String directionY = offsetY > 0 ? "forwards" : "backwards";
 		int xPWM = offsetX > 0 ? channel1Mid+PWM : channel1Mid-PWM;
@@ -52,12 +53,13 @@ public class DroneController {
 		if (Math.abs(offsetX) < minRange/* && altitude < 2*/) { xPWM = 0; directionX = "none"; }
 		if (Math.abs(offsetY) < minRange/* && altitude < 2*/) { yPWM = 0; directionY = "none"; }
 		String currentDirection = directionX + directionY;
-		boolean isDescending = (xPWM == 0 && yPWM == 0) || altitude > 2;
+		boolean isDescending = true; //(xPWM == 0 && yPWM == 0) || altitude > 2;
 		int throttlePWM = isDescending? channel3Low : 0; //descend
-		
+		long waitTime = 800;
 		//land mode
-		if (isDescending && altitude <= 1) {
+		if (isDescending && altitude <= 2) {
 			sender.mode("land", true);
+			waitTime = 400;
 		}
 		
 		double offsetMagnitude = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
@@ -68,19 +70,18 @@ public class DroneController {
 		}
 		//move toward pattern for n secs
 		sender.rc(xPWM, yPWM, throttlePWM, 0);
-
 		previousDirection = currentDirection;
 		System.out.println("Moving: " + directionX + ", " + directionY + " for " + n + " times, descending="+(throttlePWM!=0));
-		waitFor(offsetMagnitude, isDescending);
+		waitFor(offsetMagnitude, (xPWM == 0 && yPWM == 0), waitTime);
 	}
 
-	private void waitFor(double offsetMagnitude, boolean isDescending) {
+	private void waitFor(double offsetMagnitude, boolean justDescend, long waitTime) {
 		try {
-			int length = 300; //isDescending? 200 : 1000;
+			int length = 200;//justDescend? 800 : 400; //300
 			Thread.sleep(length);
-			System.out.println("stopping command");
+//			System.out.println("stopping command after " + length + " seconds");
 			cancel();
-			Thread.sleep(800);
+			Thread.sleep(waitTime); //may need to change this
 			previousOffset = offsetMagnitude;
 			droneApplication.setReadyForCommand(true);
 		} catch (InterruptedException e) {

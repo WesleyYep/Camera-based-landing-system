@@ -68,6 +68,7 @@ public class GroundStation extends Application {
 	private Button snapshotButton = new Button("Snapshot");
 	private Label modeLabel = new Label("Mode: 0 , Custom Mode: 0");
 	private Label landLabel = new Label("Landing pad not flat");
+	private Label velocityLabel = new Label("Velocity: x = 0, y = 0");
 	private Label detectedLabel = new Label("Pattern detected!");
 	private long lastModeChangedTime;
 	private long lastDetectedTime = System.currentTimeMillis();
@@ -260,6 +261,7 @@ public class GroundStation extends Application {
 		sliderBox.setTranslateY(300);
 		landLabel.setTranslateY(220);
 		detectedLabel.setTranslateY(250);
+		velocityLabel.setTranslateY(280);
 
 		imgView.setImage(new WritableImage(640, 480));
 		imgView.setFitWidth(640);
@@ -277,13 +279,14 @@ public class GroundStation extends Application {
 		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);
 		landingArrow.setFill(Color.RED);
-		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, detectedLabel, sliderBox);
+		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, detectedLabel, velocityLabel, sliderBox);
 		altitudeText.setTranslateY(20);
 		positionText.setTranslateY(40);
 		distanceText.setFont(new Font("Serif", 18));
 		altitudeText.setFont(new Font("Serif", 18));
 		positionText.setFont(new Font("Serif", 18));
 		landLabel.setFont(new Font("Serif", 18));
+		velocityLabel.setFont(new Font("Serif", 18));
 		detectedLabel.setFont(new Font("Serif", 18));
 		display.setPrefSize(384, 216);
 		display.setMaxHeight(216);
@@ -488,6 +491,8 @@ public class GroundStation extends Application {
 					} else {
 						landLabel.setText("Landing pad not flat");
 					}
+				} else if (data.toString().startsWith("velocity")) {
+					velocityLabel.setText("Velocity: " + String.format("x = %.2f, y = %.2f", Double.parseDouble(arr[1]), Double.parseDouble(arr[2])));
 				}
 			});
 		});
