@@ -226,7 +226,7 @@ public class DroneApplication {
 					sender.heartbeat();		
 				//if (testMode) {
 				//	setReadyForCommand(false);
-					controller.control(xOffsetValue, yOffsetValue, altitude);
+					controller.control(xOffsetValue, yOffsetValue, altitude, drone.currentCustomMode);
 				//}
 				}
 				System.out.println("test mode deactivated");

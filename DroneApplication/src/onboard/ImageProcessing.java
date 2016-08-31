@@ -36,6 +36,7 @@ public class ImageProcessing {
 	private long lastTime = System.currentTimeMillis();
 	private int snapshotCounter = 0;
 	private double previousX, previousY;
+	private double altitude = -1;
 	
 	public ImageProcessing(Drone drone, DroneApplication app) {
 		this.drone = drone;
@@ -272,7 +273,7 @@ public class ImageProcessing {
                     } else { //full size pattern used
                     	actualSizeMetres = !isSmallPattern ? 0.303 : 0.051;
                     }
-                    double altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*aovHorizontal/640));
+                    altitude = actualSizeMetres / (Math.tan(perceivedPixelLength*aovHorizontal/640));
                     
                     //now find x and y offset
                     xOffset = altitude * Math.tan(thetaX);
@@ -300,10 +301,10 @@ public class ImageProcessing {
 						failure(e);
 					}
 	        	} else {
-	        		droneApplication.setOffsetValues(-1, -1, -1);
+	        		droneApplication.setOffsetValues(-1, -1, altitude);
 	        	}
 	        }else {
-        		droneApplication.setOffsetValues(-1, -1, -1);
+        		droneApplication.setOffsetValues(-1, -1, altitude);
         	}
 
 	        if (snapshotCounter > 0) {
