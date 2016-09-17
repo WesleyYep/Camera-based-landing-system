@@ -1,98 +1,85 @@
-= MAVLink Java generator and library =
+# Camera Based Landing System for Air Drones 
+Designed for Part IV Project 105, University of Auckland, 2016  
+Wesley Yep and Heying Cai
 
-WARNING!!!! THIS PROJECT HAS BEEN MOVED FROM GOOGLECODE : http://code.google.com/p/mavlinkjava
-GITHUB IS ITS NEW LOCATION
+Structure
+------------  
+- DroneApplication folder consists of the Java Application's that run on board the drone and on the base station
+- org.mavlink package contains the Mavlink generator libraries forked from https://github.com/ghelle/MAVLinkJava
 
+Setup
+------------  
+- Setup a wireless hotspot from laptop or other device. This can be done either via command line (recommended) or through a mobile hotspot application
+- Connect a monitor and keyboard/mouse to the raspberry pi. Connect to the hotspot that you created. Can edit the wpa_supplicant file to ensure raspberry pi always automatically connects to your hotspot on startup
+- Make a note of the wlan ip address of the raspberry pi when connected to your hotspot
 
+Image Processing System
+------------
+- Start up the wireless hotspot
+- ssh into the raspberry pi using it’s wlan ip address (can use git bash cmd prompt if using windows)
+- Change directory to ~/Downloads/jarForPi
+- Run mavproxy onboard the drone, once it starts successfully you can stop it (ctrl-c). For some unknown reason this step is needed to get the HKPilot to begin sending mavlink messages
+- Start the base station Java application (GroundStation.java)
+- Run “java -jar mavlinktest.jar” from the raspberry pi
+- You should see that the mode changes to “81.0” on the GUI. This means the connection is successful and messages are being received.
+- Hold drone above the landing pattern and you should see the pattern location being detected. If not, try changing the range sliders on the GUI
+- Tick the “Use big pattern” checkbox to use the full size 80cm square landing pattern. Otherwise don’t tick it for the half-size pattern
 
-The goal of this project is to generate a Java Library from [http://www.qgroundcontrol.org/mavlink/ MAVLink] xml files for embedded Java (Android or not) and Java ground stations.
-It works with MAVLink 0.9 or 1.0 xml files.
+Autonomous Landing
+------------
+- Follow steps 1-8 of previous section
+- Ensure “big pattern” checkbox is selected and “test mode” checkbox is not selected
+- Use GUI to switch to stabilize mode. Press the arm button, the Pixhawk main LED should turn solid green (assuming GPS has got signal)
+- Use radio controller to control the drone to the desired height above landing pattern
+- Switch to loiter mode from the GUI, this should allow the drone to hover in once place
+- Select the “test” checkbox to begin the automated landing process. Keep an eye on the drone and be ready to deselect the checkbox and use the remote controller if the drone has unexpected behaviour
+- If all goes well, the drone should land onto the pattern
 
-It is architectured with 4 Eclipse Java projects.
-org.mavlink.generator : contains the generator and MAVLink xml files. Generated code is put in org.mavlink.library/generated folder.
-org.mavlink.library : Helpers for MAVLink and message. Contains generated code from generator.
-org.mavlink.util : CRC classes uses by generator and library.
-org.mavlink.maven : parent pom for the project
+Drone Calibration
+------------
+- Download Mission Planner and open it
+- Connect  HKpilot32 to laptop via USB cable
+- Click the “connect” button on the top right to start connection
+- Also you can connect wirelessly through the raspberry pi Wi-Fi as described in http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html 
+- After connection, go to “INITIAL_SETUP” from the top menu and then click on “Mandatory Hardware” from the left menu.
+- Perform calibration and change parameters if needed
+- When the drone can not balance well, calibrate sensors such as accelerometer and compass.
+- When the motor or radio control can not perform well, calibrate radio receiver and motor.
 
-== Generator usage : ==
-Put desired mavlink xml files in a directory. Don't forget include files.
-By example for ardupilotmega generation put ardupilotmega.xml and common.xml in a directory
+Troubleshooting
+------------
 
-Then generate code in directory "generated" in org.mavlink.library Eclipse project.
-
-So build org.mavlink.library and org.mavlink.util Eclipse project and generate jar with each jardesc in projects.
-
-Now you can use the 2 generated jar in your projects!
-
-Command line arguments of MAVLink Java generator are :
-  * source : xml file or directory path containing xml files to parse for generation
-  * target : directory path for output Java source files
-  * isLittleEndian : true if type are exchanged or stored in LittleEndian in buffer, false for BigEndian
-  * forEmbeddedJava : true if generated code must use apis for embedded code (CLDC), false else for ground station
-  * useExtraByte : if true use extra crc byte to compute CRC : true for MAVLink 1.0, false for 0.9
-  * debug : true to generate toString methods in each message class
-    
-===Example :===
-    java org.mavlink.generator.MAVLinkGenerator resources/v1.0 target/ true true true true
-    java org.mavlink.generator.MAVLinkGenerator resources/v1.0/ardupilotmega.xml target/ true true true true
-
-Generate MAVLink message Java classes for mavlink xml files contains in resources/v1.0 in target diretory for Little Endian data, embedded code with debug code.
-
-== Integration in MAVLinl distribution : ==
-Copy the 4 projects in a directory
-Go in org.mavlink.generator and run makedistrib.sh (Linux) or makedistrib.bat (Windows)
-A distrib directory is generated at the same level as the 3 projects
-Copy the directory distrib/Java in the mavlink distribution : .../mavlink/pymavlink/generator
-Go in .../mavlink/pymavlink/generator/Java
-
-So users must run gen_java.bat (Windows) or gen_java.sh (Linux) to generate jar files.
-All lib are generated in lib directory.
-Users must choose lib/org.mavlink.util-1.00.jar and one of the org.mavlink.library-xxx.jar generated to work.
-
-== Library usage : ==
-Use MAVLinkReader to read messages with method MAVLinkMessage getNextMessage(). It's return a message if available else null.
-{{{
-
-            MAVLinkReader reader = new MAVLinkReader(dis, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
-            MAVLinkMessage msg;
-            while (true) {
-                msg = reader.getNextMessage();
-                if (msg != null) {
-                	// Do your stuff
-                	...
-                }
-	    }
-}}}
-
-
-You can use also getNextMessageWithoutBlocking() : If bytes available, try to read it. Don't wait message is completed, it will be retruned nex time
-
-
-Use encode() method on MAVLink message to generate a byte buffer so you can send it in a Data Output Stream.
-{{{
-
-            msg_heartbeat hb = new msg_heartbeat(sysId, componentId);
-            hb.sequence = sequence++;
-            hb.autopilot = MAV_AUTOPILOT.MAV_AUTOPILOT_PX4;
-            hb.base_mode = MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED;
-            hb.custom_mode = custom_mode;
-            hb.mavlink_version = 3;
-            hb.system_status = MAV_STATE.MAV_STATE_POWEROFF;
-            byte[] result = hb.encode();
-            dos.put(result);
-}}}
-
-
-Don't hesitate to send me your issues or requests! :-)
-
-Have fun with that!
-
-= Note : =
-Actually 2 projects are using this code for Android :
-
-[http://www.diydrones.com/forum/topics/andropilot-alpha-tester-discussion-for-this-android-application?id=705844 AndroPilot] 
-Thank's to Kevin Hester to his remarks and issues!
-
-[http://www.autoquad.org Autoquad] 
-Thank's to Peter Hafner for his choice! :-)
-
+Drone flies around in a circle fast when switched to loiter mode
+- GPS needs to stabilize. Leave drone flat without moving for 3 minutes before flying, LED light should be flashing green
+  
+Drone LED flashes yellow/red alternately
+- EKF variance, so drone cannot switch to GPS dependent mode
+- Restart drone
+- If this doesn’t work, need to redo gyroscope and compass calibration on Mission Planner
+  
+Drone LED flashes yellow
+- Low battery
+- Can still work
+- Just be careful and stop once rapid beeping occurs
+  
+Drone drifts in a particular direction as soon as it lifts off ground
+- Adjust remote control offset sliders
+- If that doesn’t work, try redo radio calibration on Mission Planner
+- If that doesn’t work, try calibrate gyroscope and level calibration
+  
+Image processing detection doesn’t pick up the pattern
+- Try adjusting the sliders for saturation and value on the GUI
+  
+Drone flips over as soon as started up
+- Propellers may be on upside down
+- Propellers may be inserted into the incorrect pins (or wrong order) on the HKPilot32
+  
+No data is being received to the GUI application (eg. current mode)
+- Stop the application
+- run Mavproxy on raspberry pi until it says the flight mode
+- then rerun the base station app and drone app
+  
+Can’t connect to drone via ssh
+- Wait a few minutes and try again
+- Ensure Wi-Pi module light is blue
+- Try connect monitor to the raspberry pi and check the correct ip address is being used
