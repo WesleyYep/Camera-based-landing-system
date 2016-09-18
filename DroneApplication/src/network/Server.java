@@ -16,6 +16,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * This class acts as the server running on base station which the drone will connect to and send information to
+ *
+ */
 public class Server extends NetworkConnection {
 	
 	private int port;

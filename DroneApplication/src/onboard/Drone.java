@@ -1,8 +1,6 @@
 package onboard;
 /**
  * This class represents the Drone, and is updated based on the data stream that is read from the HKPilot
- * @author Wesley
- *
  */
 public class Drone {
 	public float pitch = 0;

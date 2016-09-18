@@ -17,6 +17,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * Client that runs on the drone to connect to base station server and streamserver
+ *
+ */
 public class Client extends NetworkConnection {
 
 	private String ip;

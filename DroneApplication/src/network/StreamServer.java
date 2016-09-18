@@ -9,8 +9,11 @@ import groundstation.GroundStation;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.WritableImage;
 
+/**
+ * This class acts as the server so the base station server can receive the data of the image stream from drone
+ *
+ */
 public class StreamServer extends NetworkConnection {
-	
 	private int port;
 	private GroundStation ca;
 	

@@ -3,6 +3,10 @@ package serial;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
+/**
+ * This class uses the jssc library to send and receive from the serial port
+ *
+ */
 public class SerialPortCommunicator {
 
 	private SerialPort currentSerialPort = null;

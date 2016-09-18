@@ -6,6 +6,9 @@ import java.io.PipedOutputStream;
 
 import jssc.SerialPortList;
 
+/**
+ * This class allows raspberry pi to receive data from HKPilot
+ */
 public class Reader {
 	private SerialPortCommunicator spc;
 	private PipedInputStream in = new PipedInputStream();

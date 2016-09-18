@@ -8,6 +8,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.function.Consumer;
 
+/**
+ * Base class for server and client
+ *
+ */
 public abstract class NetworkConnection {
 	
 	protected ConnectionThread connThread = new ConnectionThread();

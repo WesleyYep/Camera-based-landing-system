@@ -36,8 +36,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Font;
 
+/**
+ * This JavaFX Application is an example of a possible base station application that can be used to send high level triggers (eg. switch to autonomous landing)
+ * and display data received from the drone
+ *
+ */
 public class GroundStation extends Application {
-
 	private TextArea messages = new TextArea();
 	private TextField input = new TextField();
 	private Button btn = new Button("Send");
@@ -81,13 +85,11 @@ public class GroundStation extends Application {
 
 	private Parent createContent() {
 		messages.setPrefHeight(550);
-		// Send event
+		
+		// Send commands from the input textbox
 		btn.setOnAction(event -> {
 			if (!input.getText().isEmpty()) {
-				// String message = "BaseStation: " ;
 				String message = input.getText();
-				//input.clear();
-				//System.out.println(message + "\n");
 				try {
 					connection.send(message);
 				} catch (Exception e) {
@@ -113,8 +115,7 @@ public class GroundStation extends Application {
 			}
 		});
 
-		//switch to start/stop the landing test
-		// ARM/DISARM event
+		//switch to start/stop the autonomous landing
 		testCheckBox.setOnAction(event -> {
 			try {
 				if (testCheckBox.isSelected() == true) {
@@ -130,6 +131,7 @@ public class GroundStation extends Application {
 			}
 		});
 		
+		// send calibration message. Ensure left RC stick is middle, throttle is down, and RC controller is on
 		calibrationButton.setOnAction(event -> {
 			try {
 				connection.send("calibrate");
@@ -138,6 +140,7 @@ public class GroundStation extends Application {
 			}
 		});
 		
+		// switch between full size and half size pattern
 		bigPatternCheckBox.setOnAction(event -> {
 			try {
 				if (bigPatternCheckBox.isSelected() == true) {
@@ -163,7 +166,7 @@ public class GroundStation extends Application {
 			}
 
 		});
-
+		// Changing mode
 		loiterModeButton.setOnAction(event -> {
 			try {
 				if (loiterModeButton.isSelected() == true) {
@@ -176,7 +179,7 @@ public class GroundStation extends Application {
 			}
 
 		});
-
+		// Changing mode
 		landModeButton.setOnAction(event -> {
 			try {
 				if (landModeButton.isSelected() == true) {
@@ -188,7 +191,7 @@ public class GroundStation extends Application {
 				System.out.println("failed to send");
 			}
 		});
-
+		// Changing mode
 		guidedModeButton.setOnAction(event -> {
 			try {
 				if (guidedModeButton.isSelected() == true) {
@@ -200,7 +203,7 @@ public class GroundStation extends Application {
 				System.out.println("failed to send");
 			}
 		});
-		
+		// Changing mode
 		altHoldModeButton.setOnAction(event -> {
 			try {
 				if (altHoldModeButton.isSelected() == true) {
@@ -212,7 +215,7 @@ public class GroundStation extends Application {
 				System.out.println("failed to send");
 			}
 		});
-
+		// Starting and stopping the camera stream
 		streamToggle.setOnAction(event -> {
 			try {
 				connection.send("stream:" + streamToggle.isSelected());
@@ -224,6 +227,7 @@ public class GroundStation extends Application {
 			}
 		});
 		
+		// take snapshot
 		snapshotButton.setOnAction(event -> {
 			try {
 				connection.send("snapshot");
@@ -276,7 +280,7 @@ public class GroundStation extends Application {
 		botMenu = new HBox(5, btn, streamToggle, armCheckBox, stabilizeModeButton, loiterModeButton, landModeButton,
 				guidedModeButton, altHoldModeButton, testCheckBox, calibrationButton, bigPatternCheckBox, snapshotButton);
 
-		// Polygon drone = new Polygon(172, 128, 212, 128, 192, 88);
+		// landing arrow to show which direction drone should go
 		landingArrow = new Polygon(172, 128, 212, 128, 192, 78);
 		landingArrow.setFill(Color.RED);
 		display = new Pane(landingArrow, /* distanceText, */ altitudeText, positionText, landLabel, detectedLabel, velocityLabel, sliderBox);
@@ -366,6 +370,7 @@ public class GroundStation extends Application {
 			@Override
 			public void handle(KeyEvent event) {
 				try {
+					// test using WASD buttons for manually controlling the drone
 					switch (event.getCode()) {
 					case W:
 						connection.send("command:forward");
@@ -439,24 +444,16 @@ public class GroundStation extends Application {
 		// create message server
 		return new Server(55555, data -> {
 			Platform.runLater(() -> {
-				// System.out.println(data.toString());
 				String[] arr = data.toString().split(":");
 				if (data.toString().startsWith("start")) {
 					sliderChanged("all");
-					// Joystick joystick = new Joystick(connection);
-					// joystick.setVisible(true);
 				} else if (data.toString().startsWith("pos:")) {
-					// pos:x:y
 					double x = Double.parseDouble(arr[1]) * -1; 
 					double y = Double.parseDouble(arr[2]);
 					landingArrow.setRotate(Math.toDegrees(Math.atan2(-x, y))); 
 					positionText.setText(String.format("Relative Position: x=%.2f y=%.2f", x, y));
 					detectedLabel.setText("Pattern detected!");
 					lastDetectedTime = System.currentTimeMillis();
-				} else if (data.toString().startsWith("dist:")) {
-					// distanceText.setText(String.format("Total Distance:
-					// %.2f",
-					// Double.parseDouble(data.toString().split(":")[1])));
 				} else if (data.toString().startsWith("alt:")) {
 					altitudeText.setText(
 							String.format("Altitude: %.2f", Double.parseDouble(data.toString().split(":")[1])));

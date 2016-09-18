@@ -15,7 +15,7 @@
 	<classpathentry kind="lib" path="controlsfx-8.40.11.jar"/>
 	<classpathentry kind="lib" path="mavlinkLibraries.jar"/>
 	<classpathentry kind="src" path="resources"/>
-	<classpathentry kind="lib" path="C:/Users/Wesley/Downloads/opencv/build/java/opencv-310.jar">
+	<classpathentry kind="lib" path="H:/opencv/build/java/opencv-310.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Wesley/Downloads/opencv/build/x64/vc14/bin"/>
 		</attributes>

@@ -53,8 +53,6 @@ public class DroneApplication {
 	private String ipAddress = "169.254.110.196";
 	private boolean testMode = false;
 	private DroneController controller;
-	private boolean readyForCommand = true;
-//	private boolean testMode = true;
 	private boolean calibrated = false;
 	private double xOffsetValue, yOffsetValue, altitude;
 	
@@ -75,8 +73,7 @@ public class DroneApplication {
 		sender = new Sender(spc);
     	try {
 			System.out.println("Trying to open " + SerialPortList.getPortNames()[0]);
-			spc.openPort(SerialPortList.getPortNames()[0]); //change for raspberry pi 3
-			
+			spc.openPort(SerialPortList.getPortNames()[0]); //this should be ttyAMA0 for RPi 2
 			if (!spc.isOpened()) {
 				System.err.println("Port not opened");
 			} else {
@@ -85,17 +82,21 @@ public class DroneApplication {
     	} catch (Exception ex) {
     		System.err.println("No ports available");
     	}
-//    	
 	
-    	controller = new DroneController(sender, this);
+    	controller = new DroneController(sender);
 		ImageProcessing imageProcessing = new ImageProcessing(drone, this);
 		
 		imageProcessing.client = new Client(ipAddress, 55555, data ->{
+			// this method is the callback for when the client sends a command to server
+			// format is "command:param:param"
+			// commands are "stream, slider, arm, mode, land, command, test, pattern, calibrate, snapshot, range"
 			System.out.println(data.toString());		
 			String[] arr = data.toString().split(":");
 			if (data.toString().startsWith("stream:")) {
+				// deals with starting and stopping the streaming
 				imageProcessing.isStreaming = arr[1].equals("true");
 			} else if (data.toString().startsWith("slider:")) {
+				// deals with seting colour threshold values from slider values
 				if (arr[1].equals("h")) {
 					imageProcessing.hMin = Double.parseDouble(arr[2]);
 					imageProcessing.hMax = Double.parseDouble(arr[3]);
@@ -107,12 +108,16 @@ public class DroneApplication {
 					imageProcessing.vMax = Double.parseDouble(arr[3]);
 				}
 			} else if (data.toString().startsWith("arm:")) {
+				// deals with arming or disarming the drone
 				testArm(sender, arr[1].equals("true"));	
 			} else if (data.toString().startsWith("mode:")) {
+				// deals with changing the mode of the drone
 				changeMode(arr[1], arr[2].equals("true"));
 			} else if (data.toString().startsWith("land:")) {
-				land(sender, arr[1]); //eg. land:10
+				// deals with testing the landing of drone
+				land(sender, arr[1]); 
 			} else if (data.toString().startsWith("command:")) {
+				// deals with receiving directional commands
 				direction = arr[1];
 				if (direction.equals("forward")) {
 					controller.forward();
@@ -122,12 +127,11 @@ public class DroneApplication {
 					controller.left();
 				} else if (direction.equals("right")) {
 					controller.right();
-				} else if (direction.equals("centre")) {
-					controller.circularSearch();
 				} else if (direction.equals("cancel")) {
 					controller.cancel();
 				}
 			} else if (data.toString().startsWith("test:")) {
+				// deals with switching to the autonomous landing "test" mode
 				if (arr[1].equals("test")) {
 					testMode = Boolean.parseBoolean(arr[2]);
 					if (testMode) {
@@ -137,13 +141,17 @@ public class DroneApplication {
 					controller.setTestValue(Integer.parseInt(arr[1]));
 				}
 			} else if (data.toString().startsWith("pattern:")) {
+				// deals with switching between full size pattern and half size pattern
 				imageProcessing.setBigPattern(arr[1].equals("big"));
 			} else if (data.toString().equals("calibrate")) {
+				// calibrates drone based on current PPM positions of RC controller
         		sender.send(3);
 				calibrated = false;
 			} else if (data.toString().equals("snapshot")) {
+				// deals with taking a snapshot of what the drone sees
 				imageProcessing.snapshot();
 			} else if (data.toString().startsWith("range:")) {
+				// deals with setting the max and min PPM values of the drone
 				controller.setPWMranges(Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
 			}
 		});
@@ -168,7 +176,9 @@ public class DroneApplication {
 				if (args.length != 0) {
 					cmd = args[0];
 				}
-				
+				// These commands are used from command line and can be used to test sending/receiving Mavlink messags
+				// Is not actually used for the autonomous landing apart from testAngle
+				// Default is testAngle which receives the roll and pitch values from the HKPilot, used for the image processing algorithm
 				if (cmd.equals("send")) {
 					testSendToSerial(sender, Integer.parseInt(args[1]));
 				} else if (cmd.equals("rec")){  // rec
@@ -197,58 +207,42 @@ public class DroneApplication {
 				}
     		}
     	});
-    	
-//		Thread moveCommandThread = new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-//				while (true) {
-//					command(imageProcessing.getXOffset(), imageProcessing.getYOffset());
-//				}
-//			}
-//		});
-    	
+    	 	
 		imageProcessingThread.start();
 		mavlinkThread.start();
-//		moveCommandThread.start();
     }
-    
+
+    /**
+     * This is used to change the mode of the drone
+     * @param mode either stabilize, loiter, land
+     * @param armed whether drone should be armed or not
+     */
     public void changeMode(String mode, boolean armed) {
     	sender.heartbeat();
 		sender.mode(mode, armed);
 	}
 
-	public void command(/*double xOffsetValue, double yOffsetValue*/) {
+    /**
+     * Send commands to the drone based on the x and y offsets that are received from image processing
+     */
+	public void command() {
 		Thread t = new Thread(new Runnable () {
 			@Override
 			public void run() {
 				System.out.println("test mode activated!!!");
 				while (testMode) {
 					sender.heartbeat();		
-				//if (testMode) {
-				//	setReadyForCommand(false);
 					controller.control(xOffsetValue, yOffsetValue, altitude, drone.currentCustomMode);
-				//}
 				}
 				System.out.println("test mode deactivated");
 			}
 		});
 		t.start();
 	}
-	
-	public void circularSearchInBackground() {
-		if (!testMode) {
-	//		System.out.println("circular search not carried out since test mode not active");
-			return;
-		}
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				controller.circularSearch();
-			}
-		});
-		thread.start();
-	}
-    
+
+	/**
+	 * Used to test land mode
+	 */
     private void land(Sender sender, String degreesString) {
     	while (true) {
 			if(sender.heartbeat()) {
@@ -261,13 +255,19 @@ public class DroneApplication {
 		}
 	}    
     
+    /**
+     * Used to test sending heartbeat to drone
+     */
 	private void testHeartBeat(Sender sender) {
 		if(sender.heartbeat()) {
     		System.out.println("Successfully sent heartbeat");
     	}
 	}
     
-    private void testCommands(Sender sender,/* int value*/ int x, int y, int z) {
+	/**
+	 * Used to test sending commands to the drone
+	 */
+    private void testCommands(Sender sender, int x, int y, int z) {
 		while (true) {
 			if(sender.heartbeat()) {
 	    		System.out.println("Successfully set heartbeat");
@@ -281,6 +281,9 @@ public class DroneApplication {
 		}
     }
       
+    /**
+     * Receive angle/orientation messages from the drone
+     */
     private void testAngle(Sender sender, SerialPortCommunicator spc) {
     	sender.send(0); //stops all streams
     	sender.send(3); //rc raw values
@@ -299,16 +302,14 @@ public class DroneApplication {
         DataInputStream dis = new DataInputStream(in);
         reader = new MAVLinkReader(dis);
         try {
-            while (true /*dis.available() > 0*/) {
+            while (true) {
                 MAVLinkMessage msg = reader.getNextMessage();
                 if (msg != null && msg.messageType == msg_ahrs2.MAVLINK_MSG_ID_AHRS2) {
                     nb++;
-                    //System.out.println("SysId=" + msg.sysId + " CompId=" + msg.componentId + " seq=" + msg.sequence + " " + msg.toString());
                     drone.pitch = ((msg_ahrs2)msg).pitch;
                     drone.yaw = ((msg_ahrs2)msg).yaw;
                     drone.roll = -((msg_ahrs2)msg).roll;
                 } else if (msg != null && msg.messageType == msg_heartbeat.MAVLINK_MSG_ID_HEARTBEAT) {
-          //      	System.out.println("got heartbeat message!!!!!");
                 	nb++;
                 	drone.currentMode = ((msg_heartbeat)msg).base_mode;
                 	drone.currentCustomMode = ((msg_heartbeat)msg).custom_mode;
@@ -331,6 +332,9 @@ public class DroneApplication {
                           + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
 	}
 
+    /**
+     * Arm and disarm the drone
+     */
 	public void testArm(Sender sender, boolean arm) {
 		sender.heartbeat();
     	if(sender.arm(arm)) {
@@ -338,16 +342,18 @@ public class DroneApplication {
     	}
     }
 	
-	public boolean isReadyForCommand() {
-		return readyForCommand;
-	}
-    
+	/**
+	 * This is used to test sending to the serial port to the HKPilot from RPi
+	 */
     public void testSendToSerial(Sender sender, int streamId) {
     	if(sender.send(streamId)) {
     		System.out.println("sent successfully");
     	}    	
     }
     
+	/**
+	 * This is used to test receiving from the serial port from HKPilot to RPi
+	 */
     public void testFromSerial(SerialPortCommunicator spc) {
         MAVLinkReader reader;
         int nb = 0;
@@ -372,10 +378,9 @@ public class DroneApplication {
                           + reader.getBadSequence() + " NBLOST=" + reader.getLostBytes());
     }
 
-	public void setReadyForCommand(boolean readyForCommand) {
-		this.readyForCommand = readyForCommand;
-	}
-	
+    /**
+     * Set the offsets of x and y direction so it can be used in control algorithm
+     */
 	public void setOffsetValues(double x, double y, double altitude) {
 		this.xOffsetValue = x;
 		this.yOffsetValue = y;

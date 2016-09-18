@@ -19,6 +19,10 @@ import org.mavlink.messages.ja4rtor.msg_request_data_stream;
 import org.mavlink.messages.ja4rtor.msg_set_mode;
 import org.mavlink.messages.ja4rtor.msg_set_position_target_local_ned;
 
+
+/**
+ * This class allows raspberry pi to send data to HKPilot
+ */
 public class Sender {
 	private SerialPortCommunicator spc;
 	private int sequence = 0;
