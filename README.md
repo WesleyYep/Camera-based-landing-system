@@ -12,6 +12,9 @@ Setup
 - Setup a wireless hotspot from laptop or other device. This can be done either via command line (recommended) or through a mobile hotspot application
 - Connect a monitor and keyboard/mouse to the raspberry pi. Connect to the hotspot that you created. Can edit the wpa_supplicant file to ensure raspberry pi always automatically connects to your hotspot on startup
 - Make a note of the wlan ip address of the raspberry pi when connected to your hotspot
+- Create new Java Project in Eclipse (or other IDE)
+- Add the files from the DroneApplication folder into the root of the new project
+- Fix build path errors by adding required libraries plus OpenCV
 
 Image Processing System
 ------------
